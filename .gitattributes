@@ -1,0 +1,12 @@
+# Auto-detect text files and ensure they have LF line endings on commit.
+# This is the best way to avoid cross-platform issues.
+* text=auto eol=lf
+
+# Explicitly declare file types that should always have LF line endings
+*.md text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+.gitignore text eol=lf

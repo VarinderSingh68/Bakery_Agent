@@ -1,0 +1,17 @@
+{
+  "customer@test.com": {
+    "id": "fallback-customer",
+    "email": "customer@test.com",
+    "name": "Test Customer",
+    "password": "pbkdf2_sha256$390000$e7b6a5f4d3c2b1a0987654321fedcba9$...",
+    "role": "customer"
+  },
+  "admin@bakery.com": {
+    "id": "fallback-admin",
+    "email": "admin@bakery.com",
+    "username": "admin",
+    "name": "Admin User",
+    "password": "pbkdf2_sha256$390000$admin1234securelocaldemo0000000000$892e4016cae6e473959ad2db704c09f536461fd73045ab5965e7c7817fe9eec6",
+    "role": "admin"
+  }
+}

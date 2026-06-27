@@ -1,0 +1,5 @@
+# SQL Migration Requirements (add to requirements.txt)
+sqlalchemy[asyncio]>=2.0.0
+aiosqlite>=0.19.0
+alembic>=1.13.0
+

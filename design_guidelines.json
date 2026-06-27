@@ -1,0 +1,140 @@
+{
+  "theme": "Light",
+  "archetype": "Organic & Earthy",
+  "brand_identity": {
+    "vibe": "Warm, inviting, artisanal, premium",
+    "description": "A modern bakery e-commerce experience that feels like walking into a sunlit artisan patisserie. The product is the hero, surrounded by warm earthy tones and elegant typography."
+  },
+  "colors": {
+    "background": {
+      "primary": "#FDFBF7",
+      "secondary": "#F3EFE6",
+      "tertiary": "#EAE4D9"
+    },
+    "text": {
+      "primary": "#2D241E",
+      "secondary": "#5C4B40",
+      "muted": "#8A7E74"
+    },
+    "brand": {
+      "primary": "#C25934",
+      "primary_hover": "#A84C2A",
+      "secondary": "#4A6B53",
+      "secondary_hover": "#3D5844",
+      "accent": "#F2D780"
+    },
+    "surface": {
+      "card": "#FFFFFF",
+      "glass": "rgba(253, 251, 247, 0.85)",
+      "border": "#E3DCCF"
+    },
+    "status": {
+      "success": "#4A6B53",
+      "error": "#D94848",
+      "warning": "#F2D780",
+      "info": "#4A7A8C"
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Playfair Display, serif",
+      "weights": ["400", "600", "700"],
+      "usage": "Use for all H1, H2, H3, and stylistic brand elements. Keep letter spacing tight on large sizes."
+    },
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Use for paragraphs, UI elements, buttons, and functional text."
+    },
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none",
+      "h2": "text-3xl sm:text-4xl tracking-tight",
+      "h3": "text-2xl sm:text-3xl",
+      "h4": "text-xl",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "overline": "text-xs tracking-[0.2em] uppercase font-semibold"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing Philosophy. Use 2-3x more spacing than typical designs to let product photography breathe.",
+    "containers": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "grid_patterns": {
+      "hero": "Asymmetrical split or overlapping content. Example: Large image taking 60% width, text taking 40% with negative margin to overlap.",
+      "product_grid": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 or gap-12. No tight cramming.",
+      "bento_categories": "Use Mode A 'Tetris' Grid for category showcases with varied spans (col-span-2 row-span-2, etc)."
+    },
+    "surfaces": {
+      "header": "Crystal Glass variant: backdrop-blur-xl bg-[#FDFBF7]/85 border-b border-[#E3DCCF] sticky top-0 z-50",
+      "product_cards": "Minimalist. No heavy shadows. Flat solid #FFFFFF background, rounded-2xl, subtle 1px border border-[#E3DCCF]. Image at top with aspect-square object-cover, text padded with p-4 or p-6.",
+      "footer": "Massive padding py-20 bg-[#2D241E] text-[#FDFBF7]."
+    }
+  },
+  "components": {
+    "strategy": "Hybrid: Pure HTML/Tailwind for structural marketing/category layouts. Heavily customized Shadcn UI for interactive elements (Dropdowns, Tabs, Modals, DatePicker for delivery, Select).",
+    "buttons": {
+      "primary": "bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-6 py-3 font-medium transition-all",
+      "secondary": "bg-transparent border border-[#2D241E] text-[#2D241E] hover:bg-[#2D241E] hover:text-[#FDFBF7] rounded-full px-6 py-3 font-medium transition-all"
+    },
+    "forms": "Inputs should have rounded-xl, border-[#E3DCCF], focus:ring-2 focus:ring-[#C25934]/20 focus:border-[#C25934]. Background #FFFFFF.",
+    "badges": "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-[#F2D780] text-[#2D241E]"
+  },
+  "motion_and_interactions": {
+    "hover_states": "Product cards: image slightly scales up (scale-105) within hidden overflow. Shadow increases to shadow-lg.",
+    "transitions": "Use transition-all duration-300 ease-out for all hover states.",
+    "page_load": "Fade up text staggers. Image scale down from 110% to 100% on load."
+  },
+  "icons_and_assets": {
+    "library": "lucide-react",
+    "style": "Stroke width 1.5, elegant and minimal."
+  },
+  "media_urls": {
+    "hero_backgrounds": [
+      {
+        "url": "https://images.pexels.com/photos/3639541/pexels-photo-3639541.jpeg",
+        "category": "hero",
+        "description": "Delicious variety of freshly baked breads and pastries. Use as the main hero background or large featured image."
+      }
+    ],
+    "about_section": [
+      {
+        "url": "https://images.pexels.com/photos/7447283/pexels-photo-7447283.jpeg",
+        "category": "about",
+        "description": "Baker presenting an assortment of fresh pastries. Use in the 'About Us' or 'Our Craft' section."
+      }
+    ],
+    "products_and_categories": [
+      {
+        "url": "https://images.unsplash.com/photo-1768203629861-33e47ea111a6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwyfHxhcnRpc2FuYWwlMjBicmVhZCUyMGJha2VyeXxlbnwwfHx8fDE3NzQ3MTU5MDN8MA&ixlib=rb-4.1.0&q=85",
+        "category": "breads",
+        "description": "Artisanal bread and baguettes."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1767044315790-bc0fe664fd0b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHw0fHxnb3VybWV0JTIwY2hvY29sYXRlJTIwY2FrZSUyMHNsaWNlfGVufDB8fHx8MTc3NDcxNTkwNHww&ixlib=rb-4.1.0&q=85",
+        "category": "cakes",
+        "description": "Gourmet chocolate cake slice."
+      },
+      {
+        "url": "https://images.pexels.com/photos/30853716/pexels-photo-30853716.jpeg",
+        "category": "pastries",
+        "description": "Golden flaky artisan croissants."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build a fully functional E-commerce website for a Bakery.",
+    "Environment Constraint: The prompt requests Vanilla HTML/CSS/JavaScript, however, your project environment is React + Tailwind + FastAPI + Shadcn. Please construct the frontend using React/Tailwind/Shadcn to maintain compatibility with the environment's tools, but make it structurally clean.",
+    "Include Pages: Home, Shop, Product Details, Cart, Checkout, Login/Register, Order Confirmation, Contact, Admin Panel.",
+    "Implement product filtering, search, and a minimum 50+ product seed data generation.",
+    "Implement Cart, Wishlist, Reviews & Ratings, Coupon/discount system, and Delivery date selection.",
+    "Payment options: COD, UPI, Netbanking (Mock the gateway UI).",
+    "Email notifications: Mock the Nodemailer/SMTP flow with console logs or an API endpoint that logs the email.",
+    "Admin Panel: Manage products and orders.",
+    "Apply the Light Theme Organic & Earthy archetype colors explicitly.",
+    "Ensure generous spacing (p-8 to p-16) and asymmetrical bento grids for marketing sections.",
+    "Use 'Playfair Display' for headings and 'Manrope' for body text. Install or import them via Google Fonts.",
+    "Add 'data-testid' to all interactive elements for robust testing.",
+    "Never use placeholder URLs for images. Use the provided media URLs or other high-quality Pexels/Unsplash URLs for seeding the 50+ products.",
+    "For the logo, use a typographic text logo with the H1 font (e.g. 'Artisan Bakery')."
+  ]
+}

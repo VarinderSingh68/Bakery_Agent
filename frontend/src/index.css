@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+    :root {
+        --background: 27 20 8;
+        --foreground: 18 12 6;
+        --card: 0 0% 100%;
+        --card-foreground: 18 12 6;
+        --popover: 0 0% 100%;
+        --popover-foreground: 18 12 6;
+        --primary: 16 69% 48%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 149 23% 36%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 42 26% 91%;
+        --muted-foreground: 33 16% 49%;
+        --accent: 42 84% 73%;
+        --accent-foreground: 18 12 6;
+        --destructive: 0 71% 55%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 38 16% 87%;
+        --input: 38 16% 87%;
+        --ring: 16 69% 48%;
+        --radius: 1rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-[#FDFBF7] text-[#2D241E];
+    }
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-['Playfair_Display'];
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F3EFE6;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #C25934;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #A84C2A;
+}
