@@ -1,6 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks, Cookie, Response, Request, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
@@ -40,6 +39,7 @@ if raw_cors_origins == ['*']:
         'http://127.0.0.1:3001',
         'http://localhost:3002',
         'http://127.0.0.1:3002',
+        'https://bakery-frontend-xiyt.onrender.com',
     ]))
 else:
     cors_origins = raw_cors_origins
@@ -108,21 +108,6 @@ except Exception as e:
 
 # Create the main app
 app = FastAPI()
-# Define the list of allowed origins (your frontend's URL)
-origins = [
-    "https://bakery-frontend-xiyt.onrender.com",
-    "http://localhost:3001", # For local development
-]
-
-# Add the CORS middleware to your application
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"], # Allows all headers
-)
-
 api_router = APIRouter(prefix="/api")
 UPLOAD_ROOT = Path(os.environ.get("UPLOAD_DIR", ROOT_DIR / "uploads"))
 OFFER_UPLOAD_DIR = UPLOAD_ROOT / "offers"
