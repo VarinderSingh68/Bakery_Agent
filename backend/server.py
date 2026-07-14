@@ -31,17 +31,11 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 raw_cors_origins_str = os.environ.get('CORS_ORIGINS')
-if raw_cors_origins_str:
-    cors_origins = [origin.strip() for origin in raw_cors_origins_str.split(',') if origin.strip()]
-else:
-    # Default origins if the environment variable is not set
-    cors_origins = [
-        'http://localhost:3001',
-        'http://127.0.0.1:3001',
-        'http://localhost:3002',
-        'http://127.0.0.1:3002',
-        'https://bakery-frontend-xiyt.onrender.com',
-    ]
+cors_origins = [
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "https://bakery-frontend-xiyt.onrender.com",
+]
 
 # Password hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
