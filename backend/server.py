@@ -108,6 +108,16 @@ except Exception as e:
 
 # Create the main app
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api")
 UPLOAD_ROOT = Path(os.environ.get("UPLOAD_DIR", ROOT_DIR / "uploads"))
 OFFER_UPLOAD_DIR = UPLOAD_ROOT / "offers"
@@ -2741,15 +2751,6 @@ async def health():
 
 # Include router
 app.include_router(api_router)
-
-# Add CORS middleware AFTER including routes
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logging.basicConfig(
     level=logging.INFO,
