@@ -26,14 +26,14 @@ export const AuthCallback = () => {
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
-    const processSession = async () => {
+                const processSession = async () => {
       try {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const searchParams = new URLSearchParams(window.location.search);
         const errorParam = hashParams.get('error') || searchParams.get('error');
         const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
-        const code = hashParams.get('code') || searchParams.get('code');
-        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        const code = searchParams.get('code');
+        const accessToken = hashParams.get('access_token');
         const sessionId = hashParams.get('session_id') || searchParams.get('session_id');
         const state = hashParams.get('state') || searchParams.get('state');
 
@@ -121,14 +121,10 @@ export const AuthCallback = () => {
 
         const data = response.data;
 
-        console.log('[AuthCallback] OAuth response data:', data);
-        console.log('[AuthCallback] Token from backend:', data.token);
-
         if (!data.token) {
           console.error('[AuthCallback] WARNING: No token in OAuth response!');
         }
 
-        // Store JWT token and set user in context
         setUserFromOAuth({
           id: data.id || data.user?.id,
           email: data.email || data.user?.email,
@@ -136,11 +132,8 @@ export const AuthCallback = () => {
           role: data.role || data.user?.role || 'customer'
         }, data.token || null);
 
-        console.log('[AuthCallback] Token stored in context');
-
         toast.success(`Welcome, ${data.name || data.user?.name || 'back'}!`);
 
-        // Prevent callback params from being re-read by route guard, and avoid repeated loops.
         clearOAuthSessionState();
         window.history.replaceState({}, '', '/');
         navigate('/', { replace: true });
@@ -152,7 +145,6 @@ export const AuthCallback = () => {
           'Authentication failed. Please try again.';
         toast.error(message);
 
-        // Avoid leaving failed callback params in URL and prevent repeated re-processing loops.
         clearOAuthSessionState();
         window.history.replaceState({}, '', '/login');
         navigate('/login', { replace: true });

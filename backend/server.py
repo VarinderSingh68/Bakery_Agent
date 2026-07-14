@@ -25,27 +25,21 @@ import json
 import re
 from database import get_db, engine, Base, AsyncSessionLocal
 import crud
-# OrderCreate is Pydantic BaseModel in server.py, not SQLAlchemy model
-from models import Order
+from models import Order # OrderCreate is defined in this file, but Order model is imported
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# SQLite async database configured in database.py
-# Tables created with python init_db.py
-
 raw_cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
 if raw_cors_origins == ['*']:
-    cors_origins = [
-        'http://localhost:3000',
+    cors_origins = list(set([
+        'http://localhost:3001',
         'http://127.0.0.1:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3001',
         'http://localhost:3002',
         'http://127.0.0.1:3002',
-        'http://localhost:3000',
-        'http://localhost:3001'
-    ]
+    ]))
 else:
     cors_origins = raw_cors_origins
 
@@ -69,8 +63,9 @@ MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
 MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
 ADMIN_EMAIL = DEFAULT_SENDER_EMAIL
 
-# Only configure email if credentials are provided
+# Configure email if credentials are provided
 fm = None
+EMAIL_CONFIGURED = False
 if MAIL_USERNAME and MAIL_PASSWORD:
     try:
         conf = ConnectionConfig(
@@ -85,8 +80,11 @@ if MAIL_USERNAME and MAIL_PASSWORD:
             VALIDATE_CERTS=True
         )
         fm = FastMail(conf)
+        EMAIL_CONFIGURED = True
     except Exception as e:
         logging.warning(f"Email configuration failed: {e}")
+else:
+    logging.warning("Email credentials not found in .env file. Email sending will be disabled.")
 
 # Security
 # Allow cookie-only Google OAuth sessions to reach the auth dependency
@@ -110,7 +108,7 @@ except Exception as e:
 # Create the main app
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
-UPLOAD_ROOT = ROOT_DIR / "uploads"
+UPLOAD_ROOT = Path(os.environ.get("UPLOAD_DIR", ROOT_DIR / "uploads"))
 OFFER_UPLOAD_DIR = UPLOAD_ROOT / "offers"
 BANNER_UPLOAD_DIR = UPLOAD_ROOT / "banners"
 OFFER_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -118,7 +116,7 @@ BANNER_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_ROOT), name="uploads")
 
 # Models
-class UserCreate(BaseModel):
+class UserCreate(BaseModel): 
     email: EmailStr
     username: Optional[str] = None
     password: str = Field(min_length=6)
@@ -127,7 +125,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
-
+ 
 class GoogleBrowserLogin(BaseModel):
     email: EmailStr
     name: str
@@ -141,12 +139,12 @@ class User(BaseModel):
     name: str
     role: str = "customer"
     created_at: str
-
+ 
 class Variant(BaseModel):
     label: str
     multiplier: float
 
-
+ 
 DEFAULT_WEIGHT_VARIANTS = [
     {"label": "0.5kg", "multiplier": 0.5},
     {"label": "1kg", "multiplier": 1},
@@ -154,7 +152,7 @@ DEFAULT_WEIGHT_VARIANTS = [
     {"label": "3kg", "multiplier": 3},
     {"label": "4kg", "multiplier": 4},
 ]
-
+ 
 DEFAULT_CATEGORY_VARIANTS = {
     "Cakes": DEFAULT_WEIGHT_VARIANTS,
     "Custom Cakes": [
@@ -261,7 +259,7 @@ class Product(BaseModel):
     rating: float = 0.0
     reviews_count: int = 0
     variants: Optional[List[Variant]] = None
-
+ 
 class CartItem(BaseModel):
     product_id: str
     quantity: int
@@ -269,15 +267,15 @@ class CartItem(BaseModel):
     price: Union[float, int]
     image: str
     variant: Optional[str] = None
-
+ 
     class Config:
         arbitrary_types_allowed = True
-
+ 
 class Cart(BaseModel):
     user_id: str
     items: List[CartItem]
     total: float
-
+ 
 class OrderItem(BaseModel):
     product_id: str
     name: str
@@ -285,7 +283,7 @@ class OrderItem(BaseModel):
     quantity: int
     image: str
 
-class OrderCreate(BaseModel):
+class OrderCreate(BaseModel): 
     items: List[OrderItem]
     subtotal: float
     shipping_cost: float
@@ -299,7 +297,7 @@ class OrderCreate(BaseModel):
     shipping_state: str
     shipping_zip: str
     coupon_code: Optional[str] = None
-
+ 
 class Order(BaseModel):
     id: str
     user_id: str
@@ -329,28 +327,28 @@ class Review(BaseModel):
     rating: int
     comment: str
     created_at: str
-
+ 
 class ReviewCreate(BaseModel):
     product_id: str
     rating: int = Field(ge=1, le=5)
     comment: str
-
+ 
 class Coupon(BaseModel):
     code: str
     discount_percentage: float
     expiry_date: str
     active: bool
-
+ 
 class CouponValidate(BaseModel):
     code: str
     total: float
-
+ 
 class ContactMessage(BaseModel):
     name: str
     email: EmailStr
     subject: str
     message: str
-
+ 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=500)
 
@@ -361,7 +359,7 @@ class ProductCreate(BaseModel):
     description: str
     image: str
     stock: int
-    variants: Optional[List[Variant]] = None
+    variants: Optional[List[Variant]] = None 
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -371,7 +369,7 @@ class ProductUpdate(BaseModel):
     image: Optional[str] = None
     stock: Optional[int] = None
     variants: Optional[List[Variant]] = None
-
+ 
 class OfferMediaCreate(BaseModel):
     kind: str = Field(pattern="^(offer|reel)$")
     title: str = Field(min_length=1, max_length=120)
@@ -383,7 +381,7 @@ class OfferMediaCreate(BaseModel):
     cta_url: Optional[str] = None
     active: bool = True
     sort_order: int = 0
-
+ 
 class OfferMediaUpdate(BaseModel):
     kind: Optional[str] = Field(default=None, pattern="^(offer|reel)$")
     title: Optional[str] = Field(default=None, min_length=1, max_length=120)
@@ -395,7 +393,7 @@ class OfferMediaUpdate(BaseModel):
     cta_url: Optional[str] = None
     active: Optional[bool] = None
     sort_order: Optional[int] = None
-
+ 
 class BannerCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     subtitle: Optional[str] = ""
@@ -408,7 +406,7 @@ class BannerCreate(BaseModel):
     accent: str = "#F2D780"
     active: bool = True
     sort_order: int = 0
-
+ 
 class BannerUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=120)
     subtitle: Optional[str] = None
@@ -421,7 +419,7 @@ class BannerUpdate(BaseModel):
     accent: Optional[str] = None
     active: Optional[bool] = None
     sort_order: Optional[int] = None
-
+ 
 DEFAULT_BANNERS = [
     {
         "title": "Fresh Baked Daily",
@@ -462,7 +460,7 @@ DEFAULT_BANNERS = [
         "active": True,
         "sort_order": 3,
     },
-]
+] 
 
 DEFAULT_PRODUCTS = [
     {
@@ -625,7 +623,7 @@ DEFAULT_PRODUCTS = [
         "rating": 4.7,
         "reviews_count": 57,
     },
-]
+] 
 
 
 def build_chat_reply(message: str) -> str:
@@ -673,7 +671,7 @@ def hash_password(password: str) -> str:
     iterations = 390000
     salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations)
-    return f"pbkdf2_sha256${iterations}${salt}${digest.hex()}"
+    return f"pbkdf2_sha256${iterations}${salt}${digest.hex()}" 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password:
@@ -716,7 +714,7 @@ def get_fallback_users() -> dict:
             "password": hash_password(ADMIN_LOGIN_PASSWORD),
             "role": "admin"
         }
-    }
+    } 
 
 FALLBACK_USERS = get_fallback_users()
 LOCAL_AUTH_USERS_PATH = ROOT_DIR / "auth_users.json"
@@ -736,7 +734,7 @@ def load_local_auth_users() -> dict:
 
 
 def save_local_auth_users(users: dict) -> None:
-    try:
+    try: 
         with LOCAL_AUTH_USERS_PATH.open("w", encoding="utf-8") as file:
             json.dump(users, file, indent=2)
     except Exception as e:
@@ -746,7 +744,7 @@ def save_local_auth_users(users: dict) -> None:
 
 def get_local_user_by_email(email: str) -> Optional[dict]:
     return load_local_auth_users().get(email)
-
+ 
 
 def get_local_user_by_username(username: str) -> Optional[dict]:
     users = load_local_auth_users().values()
@@ -756,7 +754,7 @@ def get_local_user_by_username(username: str) -> Optional[dict]:
 def get_local_user_by_id(user_id: str) -> Optional[dict]:
     users = load_local_auth_users().values()
     return next((user for user in users if user.get("id") == user_id), None)
-
+ 
 
 def store_local_auth_user(user: dict) -> dict:
     users = load_local_auth_users()
@@ -764,7 +762,7 @@ def store_local_auth_user(user: dict) -> dict:
     save_local_auth_users(users)
     return user
 
-
+ 
 def serialize_sqlalchemy_record(record) -> dict:
     data = dict(record.__dict__)
     data.pop('_sa_instance_state', None)
@@ -774,7 +772,7 @@ def serialize_sqlalchemy_record(record) -> dict:
             data[key] = value.isoformat()
 
     return data
-
+ 
 def get_instagram_embed_url(reel_url: Optional[str]) -> Optional[str]:
     if not reel_url:
         return None
@@ -792,7 +790,7 @@ def get_instagram_embed_url(reel_url: Optional[str]) -> Optional[str]:
 
     content_type, shortcode = match.groups()
     return f"https://www.instagram.com/{content_type}/{shortcode}/embed"
-
+ 
 def normalize_offer_payload(payload: dict) -> dict:
     data = {
         key: value.strip() if isinstance(value, str) else value
@@ -818,7 +816,7 @@ def normalize_offer_payload(payload: dict) -> dict:
         data["embed_url"] = None
 
     return data
-
+ 
 def normalize_banner_payload(payload: dict) -> dict:
     data = {
         key: value.strip() if isinstance(value, str) else value
@@ -840,17 +838,17 @@ def normalize_banner_payload(payload: dict) -> dict:
     if "active" not in data or data["active"] is None:
         data["active"] = True
     return data
-
+ 
 def build_upload_url(request: Request, filename: str) -> str:
     base_url = str(request.base_url).rstrip("/")
     return f"{base_url}/uploads/offers/{filename}"
 
-
+ 
 def build_banner_upload_url(request: Request, filename: str) -> str:
     base_url = str(request.base_url).rstrip("/")
     return f"{base_url}/uploads/banners/{filename}"
 
-
+ 
 def format_order_item_html(item) -> str:
     """Format a single order item as HTML for email templates.
     Works with both dictionaries and Pydantic models."""
@@ -1100,14 +1098,14 @@ async def debug_oauth_config():
         "client_id_preview": client_id[:20] + "..." if client_id and len(client_id) > 20 else client_id,
         "client_secret_set": bool(client_secret),
         "client_secret_is_placeholder": client_secret == "your-google-oauth-client-secret" if client_secret else True,
-        "redirect_uri_backend": "http://localhost:3000/auth/callback",
-        "frontend_expected_redirect_uri": "http://localhost:3000/auth/callback",
+        "redirect_uri_backend": "http://localhost:3001/auth/callback",
+        "frontend_expected_redirect_uri": "http://localhost:3001/auth/callback",
         "match": True,
         "instructions": {
             "step_1": "Ensure GOOGLE_CLIENT_SECRET in backend/.env is your REAL secret from Google Cloud Console",
-            "step_2": "In Google Cloud Console, verify Authorized redirect URIs includes: http://localhost:3000/auth/callback",
-            "step_3": "Verify Authorized JavaScript origins includes: http://localhost:3000",
-            "step_4": "Verify the frontend is at http://localhost:3000 (not 127.0.0.1:3000)"
+            "step_2": "In Google Cloud Console, verify Authorized redirect URIs includes: http://localhost:3001/auth/callback",
+            "step_3": "Verify Authorized JavaScript origins includes: http://localhost:3001",
+            "step_4": "Verify the frontend is at http://localhost:3001 (not 127.0.0.1:3000)"
         }
     }
 
@@ -1131,7 +1129,7 @@ async def test_token_exchange(request: Request):
         
         # Use a dummy code to test what error Google returns
         token_url = "https://oauth2.googleapis.com/token"
-        redirect_uri = "http://localhost:3000/auth/callback"
+        redirect_uri = "http://localhost:3001/auth/callback"
         
         token_data = {
             "client_id": client_id,
@@ -1157,7 +1155,7 @@ async def test_token_exchange(request: Request):
                     "401_error": "Invalid client secret, authorization code, or redirect_uri mismatch",
                     "next_steps": [
                         "1. Check if GOOGLE_CLIENT_SECRET in backend/.env matches Google Cloud Console",
-                        "2. Check if Authorized redirect URIs in Google Console includes: http://localhost:3000/auth/callback",
+                        "2. Check if Authorized redirect URIs in Google Console includes: http://localhost:3001/auth/callback",
                         "3. If you see 'invalid_client', the secret is wrong",
                         "4. If you see 'redirect_uri_mismatch', the redirect_uri doesn't match Google Console config"
                     ]
@@ -1185,7 +1183,7 @@ async def google_oauth_callback(request: Request, background_tasks: BackgroundTa
         
         # If frontend doesn't provide redirect_uri, support both localhost and 127.0.0.1
         if not redirect_uri:
-            redirect_uri = "http://localhost:3000/auth/callback"
+            redirect_uri = "http://localhost:3001/auth/callback"
         
         logging.info(f"OAuth callback: code={code[:10]}..., redirect_uri={redirect_uri}")
         client_id = os.environ.get("GOOGLE_CLIENT_ID")
@@ -2848,6 +2846,12 @@ async def ensure_database_tables():
     await seed_default_banners()
     await seed_default_products()
     await ensure_category_product_variants()
+    if not EMAIL_CONFIGURED:
+        logger.warning("="*80)
+        logger.warning("EMAIL NOT CONFIGURED")
+        logger.warning("Emails for login and order confirmation will NOT be sent.")
+        logger.warning("To enable email, set MAIL_USERNAME and MAIL_PASSWORD in backend/.env")
+        logger.warning("="*80)
 
 # Shutdown MongoDB client
 @app.on_event("shutdown")

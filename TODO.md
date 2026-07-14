@@ -1,26 +1,17 @@
-# Fix Admin Panel + Add Username/Password Login
+# TODO - Fix frontend compile errors
 
-## Root Causes Found
-1. **Admin.js redirects before auth loading finishes** - causes premature redirect to `/`
-2. **auth_users.json has malformed password hashes** (missing digest part) - login always fails for DB users
-3. **init_db.py skips existing users** - bad hashes persist forever in SQLite
-4. **No username field exists** anywhere in backend/frontend
+## Goal
+Make the React frontend compile and run successfully.
 
-## Steps
-- [x] 1. Fix `frontend/src/pages/Admin.js` - wait for `loading` before role check redirect
-- [x] 2. Add `username` column to `backend/models.py` SQLAlchemy User model
-- [x] 3. Fix `backend/auth_users.json` - generate valid hashes, add username fields
-- [x] 4. Update `backend/init_db.py` - migrate username column, update existing users from JSON
-- [x] 5. Update `backend/server.py` Pydantic models & login endpoint to accept email OR username
-- [x] 6. Add `backend/crud.py` `get_user_by_username` helper
-- [x] 7. Update `frontend/src/pages/Login.js` - show username in registration, "Email or Username" for login
-- [x] 8. Update `frontend/src/context/AuthContext.js` - pass identifier correctly
-- [x] 9. Run `python backend/init_db.py` to apply fixes
-- [x] 10. Verify admin panel opens and login works with both email and username
+## Current failing errors
+- Can't resolve `@/lib/utils`
+- Can't resolve `@/components/ui/button`
 
-## Test Results
-- Admin email login: OK (admin@bakery.com / admin123)
-- Admin username login: OK (admin / admin123)
-- Customer username login: OK (customer / customer123)
-- Wrong password: Correctly rejected (401)
+## Plan
+1) Fix CRA/CRACO alias resolution for `@` consistently (webpack + jsconfig).
+2) Ensure imports `@/lib/utils` and `@/components/ui/button` resolve by verifying directory structure.
+3) Restart frontend dev server and confirm it compiles.
+4) Confirm UI loads at http://localhost:3001.
 
+## Completed
+- (not started)

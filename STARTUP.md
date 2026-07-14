@@ -1,58 +1,42 @@
 # Bakery Project - Quick Start Guide
 
-## Problem
-You're getting the error: "Cannot reach order server at http://localhost:8000/api/orders"
-
-This means the **backend is not running**. Follow the steps below to fix it.
-
 ---
 
 ## Quick Start (Windows)
 
-### Option 1: Use Startup Scripts (Easiest)
+**First-time setup (from project root):**
+1. Open a terminal in the project root (`d:\ngwd\Bakery-main`).
+2. Install all dependencies:
+   ```powershell
+   npm install
+   ```
 
-1. **Start Backend** (in first terminal window):
+2. **Run the Application** (from project root):
+   ```powershell
+   npm start
    ```
-   cd d:\ngwd\Bakery-main
-   start-backend.bat
-   ```
-   Wait for "Application startup complete" message
+   This will start both the backend and frontend servers concurrently in a single terminal.
 
-2. **Start Frontend** (in second terminal window):
-   ```
-   cd d:\ngwd\Bakery-main
-   start-frontend.bat
-   ```
-   Wait for "webpack compiled" or similar message
-
-3. Open browser to **http://localhost:3001**
+3. Open your browser to **http://localhost:3001**.
 
 ---
 
-### Option 2: Manual Commands
+## Configuring Email
 
-**Terminal 1 - Backend:**
-```powershell
-cd d:\ngwd\Bakery-main\backend
-.venv-1\Scripts\activate.bat
-python -m uvicorn server:app --host 0.0.0.0 --port 8000 --reload --log-level info
-```
+For email features (login notifications, order confirmations) to work, you must configure your email provider credentials.
 
-**Terminal 2 - Frontend:**
-```powershell
-cd d:\ngwd\Bakery-main\frontend
-set PORT=3001
-npm start
-```
+1.  After running `npm install`, a `.env` file will be created in the `backend` directory.
+2.  Open `backend/.env` and fill in your `MAIL_USERNAME` and `MAIL_PASSWORD`.
+3.  For Gmail, you will need to generate an "App Password". See Google's documentation for instructions.
 
 ---
 
 ## Verify Everything Works
 
 ### Backend Health Check
-Open in browser or run:
+Open in a browser or run:
 ```powershell
-Invoke-WebRequest http://localhost:8000/api/health
+Invoke-WebRequest http://localhost:8001/api/health
 ```
 Should return: `{"status":"ok"}`
 
@@ -65,9 +49,9 @@ Should return: `{"status":"ok"}`
 
 ## Troubleshooting
 
-### "Port 8000 already in use"
+### "Port 8001 already in use"
 - Kill existing process: `taskkill /F /IM python.exe`
-- Or use different port: `--port 8001`
+- Or use a different port in `start-backend.bat`, e.g., `--port 8002`
 
 ### "Port 3001 already in use"
 - Kill existing node: `taskkill /F /IM node.exe`
@@ -82,7 +66,7 @@ Should return: `{"status":"ok"}`
 - Restart terminal and try again
 
 ### "Cannot reach order server" still shows
-1. Verify backend is running: `netstat -ano | findstr :8000`
+1. Verify backend is running: `netstat -ano | findstr :8001`
 2. Check browser Console (F12) for CORS errors
 3. Check backend logs for error messages
 
@@ -90,13 +74,13 @@ Should return: `{"status":"ok"}`
 
 ## Architecture
 
-- **Backend**: FastAPI server on http://localhost:8000/api
+- **Backend**: FastAPI server on http://localhost:8001/api
 - **Frontend**: React dev server on http://localhost:3001
 - **Database**: SQLite at `backend/bakery.db`
 
 Order endpoint flow:
-1. Frontend at 3001 makes POST to http://localhost:8000/api/orders
-2. Backend (8000) creates order in SQLite database
+1. Frontend at 3001 makes POST to http://localhost:8001/api/orders
+2. Backend (8001) creates order in SQLite database
 3. Backend returns order confirmation
 4. Frontend shows success screen
 
@@ -104,10 +88,10 @@ Order endpoint flow:
 
 ## Common Endpoints
 
-- Backend API: http://localhost:8000/api
-- Health Check: http://localhost:8000/api/health  
+- Backend API: http://localhost:8001/api
+- Health Check: http://localhost:8001/api/health
 - Frontend: http://localhost:3001
-- Docs: http://localhost:8000/docs (Swagger UI)
+- Docs: http://localhost:8001/docs (Swagger UI)
 
 ---
 

@@ -83,7 +83,7 @@ If you want to stick with port 3001, create a new OAuth Client:
 ## 🔧 Current Configuration
 
 **Frontend Port**: 3001
-**Backend Port**: 8000
+**Backend Port**: 8001
 **Expected Redirect URI**: `http://localhost:3001/auth/callback`
 
 ---
@@ -148,11 +148,10 @@ User is logged in to Bakery app
 ## 🚀 Complete Restart Steps
 
 After updating Google Cloud Console:
-
 ```powershell
-# Terminal 1: Backend (already running on 8000)
+# Terminal 1: Backend
 cd d:\ngwd\Bakery-main\backend
-python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn server:app --reload --host 0.0.0.0 --port 8001
 
 # Terminal 2: Frontend (restart on 3001)
 cd d:\ngwd\Bakery-main\frontend

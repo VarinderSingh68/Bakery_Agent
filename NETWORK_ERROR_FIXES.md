@@ -53,12 +53,12 @@
 
 ### Frontend
 - **Port**: 3001
-- **API URL**: `http://localhost:8000/api`
-- **Backend URL**: `http://localhost:8000`
+- **API URL**: `http://localhost:8001/api`
+- **Backend URL**: `http://localhost:8001`
 - **OAuth Redirect**: `http://localhost:3001/auth/callback`
 
 ### Backend
-- **Port**: 8000
+- **Port**: 8001
 - **API Routes**: Prefix `/api` (all endpoints under `/api/*`)
 - **CORS**: Enabled with wildcard origins for localhost
 
@@ -66,7 +66,7 @@
 
 ### Step 1: Check Backend is Running
 ```bash
-# Terminal shows: INFO: Uvicorn running on http://0.0.0.0:8000
+# Terminal shows: INFO: Uvicorn running on http://0.0.0.0:8001
 # Check: d:\ngwd\Bakery-main\backend terminal (acdb4446-8fb7-407d-acd8-146cc7f2dce9)
 ```
 
@@ -92,8 +92,8 @@
 |-------|-------|----------|
 | `GET /api/auth/me 401` after login | Token not being sent | Check localStorage for `token` key. Token should persist after login |
 | `POST /api/auth/login 401` | Wrong credentials | Verify email/password are correct. Try demo account: `admin@bakery.com / admin123` |
-| `POST /api/auth/login 404` or `502` | Backend unreachable | Verify backend is running on port 8000. Check firewall settings |
-| `CORS error in console` | Cross-origin request blocked | Verify `REACT_APP_API_URL=http://localhost:8000/api` in .env.local |
+| `POST /api/auth/login 404` or `502` | Backend unreachable | Verify backend is running on port 8001. Check firewall settings |
+| `CORS error in console` | Cross-origin request blocked | Verify `REACT_APP_API_URL=http://localhost:8001/api` in .env.local |
 | `Mixed content warning` | HTTP/HTTPS mismatch | Ensure both frontend and backend use http:// (not https://) for localhost |
 
 ### Step 5: Test Endpoints Manually
@@ -121,12 +121,9 @@ Expected: User object
 
 ## 🚀 Quick Restart Instructions
 
-If servers crash or need restart:
-
-### Restart Backend
+If servers crash or need a restart, run the following from the project root:
 ```powershell
-cd d:\ngwd\Bakery-main\backend
-python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000
+npm start
 ```
 
 ### Restart Frontend (Port 3001)

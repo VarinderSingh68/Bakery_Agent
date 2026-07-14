@@ -1,0 +1,14 @@
+{
+  "name": "bakery-root",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "scripts": {
+    "install": "npm install && cd frontend && npm install",
+    "start": "npm run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"bgBlue.bold,bgGreen.bold\" \"npm:start:backend\" \"npm:start:frontend\"",
+    "start:backend": "start-backend.bat",
+    "start:frontend": "start-frontend.bat"
+  }
+}

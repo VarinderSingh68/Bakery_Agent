@@ -6,16 +6,6 @@ const AuthContext = createContext();
 const TOKEN_STORAGE_KEY = 'token';
 const USER_STORAGE_KEY = 'auth_user';
 
-const hasOAuthCallbackParams = () =>
-  window.location.hash?.includes('session_id=') ||
-  window.location.search?.includes('session_id=') ||
-  window.location.hash?.includes('code=') ||
-  window.location.search?.includes('code=') ||
-  window.location.hash?.includes('access_token=') ||
-  window.location.search?.includes('access_token=') ||
-  window.location.hash?.includes('error=') ||
-  window.location.search?.includes('error=');
-
 const readStoredUser = () => {
   try {
     const rawUser = localStorage.getItem(USER_STORAGE_KEY);
@@ -80,15 +70,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // CRITICAL: When OAuth params are present anywhere in the URL, skip /me
-    // until callback processing completes.
-    const isOAuthCallbackRoute = hasOAuthCallbackParams();
-
-    if (isOAuthCallbackRoute) {
-      setLoading(false);
-      return;
-    }
-
     if (token && token.startsWith('mock-jwt-token-')) {
       setLoading(false);
       return;
@@ -193,8 +174,11 @@ export const AuthProvider = ({ children }) => {
 
   const setUserFromOAuth = (userData, jwtToken) => {
     persistAuthState(userData, jwtToken);
-    setUser(userData);
+    setUser(userData || null);
     setToken(jwtToken || null);
+    if (jwtToken) {
+      fetchCurrentUser(jwtToken);
+    }
   };
 
   return (

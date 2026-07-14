@@ -37,7 +37,23 @@ let webpackConfig = {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    configure: (webpackConfig) => {
+    configure: (webpackConfig, { paths }) => {
+      // Ensure paths.appSrc is set correctly
+      paths.appSrc = path.resolve(__dirname, 'src');
+
+      // Add resolve configuration for @ alias.
+      webpackConfig.resolve = webpackConfig.resolve || {};
+
+      // Ensure alias also works with the bare '@' and the '@/...' prefix.
+      // CRA/webpack treats these as literal keys.
+      webpackConfig.resolve.alias = {
+        ...(webpackConfig.resolve.alias || {}),
+        '@': path.resolve(__dirname, 'src'),
+        '@/': path.resolve(__dirname, 'src') + '/',
+      };
+
+      // Ensure extensions exist (defensive)
+      webpackConfig.resolve.extensions = webpackConfig.resolve.extensions || ['.js', '.jsx', '.json'];
 
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {

@@ -23,24 +23,29 @@ import { Offers } from './pages/Offers';
 import { Admin } from './pages/Admin';
 import './App.css';
 
+const hasOAuthCallbackParams = (location) => {
+  const searchParams = new URLSearchParams(location.search);
+  const hashParams = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  const oauthKeys = ['code', 'access_token', 'session_id', 'error', 'error_description'];
+
+  return oauthKeys.some((key) => searchParams.has(key) || hashParams.has(key));
+};
+
 function AppRouter() {
   const location = useLocation();
+  const shouldProcessOAuthCallback =
+    location.pathname === '/auth/callback' || hasOAuthCallbackParams(location);
+
+  if (shouldProcessOAuthCallback) {
+    return (
+      <main className="flex-grow">
+        <AuthCallback />
+      </main>
+    );
+  }
+
   const cleanLayoutRoutes = ['/login', '/admin-login', '/admin'];
   const useCleanLayout = cleanLayoutRoutes.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
-  const hasOAuthParams =
-    location.hash?.includes('session_id=') ||
-    location.search?.includes('session_id=') ||
-    location.hash?.includes('code=') ||
-    location.search?.includes('code=') ||
-    location.hash?.includes('access_token=') ||
-    location.search?.includes('access_token=') ||
-    location.hash?.includes('error=') ||
-    location.search?.includes('error=');
-  
-  // Process OAuth callback params no matter which route received them.
-  if (hasOAuthParams) {
-    return <AuthCallback />;
-  }
   
   return (
     <>
