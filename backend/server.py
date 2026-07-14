@@ -30,19 +30,18 @@ from models import Order # OrderCreate is defined in this file, but Order model 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-raw_cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
-if raw_cors_origins == ['*']:
-    cors_origins = list(set([
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
+raw_cors_origins_str = os.environ.get('CORS_ORIGINS')
+if raw_cors_origins_str:
+    cors_origins = [origin.strip() for origin in raw_cors_origins_str.split(',') if origin.strip()]
+else:
+    # Default origins if the environment variable is not set
+    cors_origins = [
         'http://localhost:3001',
         'http://127.0.0.1:3001',
         'http://localhost:3002',
         'http://127.0.0.1:3002',
         'https://bakery-frontend-xiyt.onrender.com',
-    ]))
-else:
-    cors_origins = raw_cors_origins
+    ]
 
 # Password hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
