@@ -1278,7 +1278,7 @@ async def google_oauth_callback(request: Request, background_tasks: BackgroundTa
                 "google_id": google_id,
                 "picture": picture,
                 "role": "customer",
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": datetime.now(timezone.utc)
             }
             user_obj = await crud.create_user(db, user_dict)
             user = serialize_sqlalchemy_record(user_obj)
@@ -1669,7 +1669,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         "password": hash_password(user_data.password),
         "name": user_data.name,
         "role": "customer",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc)
     }
 
     user_obj = await crud.create_user(db, user_dict)
@@ -1754,7 +1754,7 @@ async def google_session(request: Request, response: Response, background_tasks:
             "name": user_data.get("name", "User"),
             "picture": user_data.get("picture"),
             "role": "customer",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": datetime.now(timezone.utc)
         }
         await crud.create_user(db, new_user)
     
