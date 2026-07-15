@@ -1,18 +1,17 @@
-# TODO - Fix Backend and Frontend Issues
+# TODO - Backend and Frontend Tasks
 
-## Current Issue: Google Login Fails with Database Error
-- **Error**: `TypeError: SQLite DateTime type only accepts Python datetime and date objects as input.`
-- **Cause**: When creating a new user via Google OAuth, the backend was passing the `created_at` timestamp as a string (`.isoformat()`) instead of a `datetime` object, which the database driver for SQLite does not accept.
-- **Status**: A fix has been prepared.
+## Current Tasks
+- **[In Progress]** Push all recent login fixes to GitHub.
+- **[TODO]** Verify all login methods (email/password, Google) work correctly after deployment.
 
-## Plan
-1. **[COMPLETED]** Fix the `TypeError` in `backend/server.py` by passing a `datetime` object for `created_at` during user creation.
-2. **[TODO]** Push changes to GitHub and trigger a new deployment.
-3. **[TODO]** Verify that Google Login works correctly on the live site.
+---
 
-## Previous Issues (Resolved)
-- **Issue**: Frontend compile errors (`Can't resolve @/...`).
-- **Fix**: Added `craco.config.js` and `jsconfig.json` to configure path aliases and created missing UI component files.
+## Completed Tasks
 
-## Completed
-- Updated `backend/server.py` to correct the data type for timestamps.
+### Backend
+- ✅ **Fixed General Login:** Stabilized the login process by simplifying user lookup logic.
+- ✅ **Adjusted Logging:** Changed email failure log level from `ERROR` to `WARNING` to prevent confusion.
+- ✅ **Fixed Google OAuth `TypeError`:** Ensured `created_at` is a `datetime` object for new Google users, resolving a critical database error.
+
+### Frontend
+- ✅ **Fixed Compile Errors:** Resolved `Can't resolve @/...` errors by adding `craco.config.js` and `jsconfig.json` for path aliases.

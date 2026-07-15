@@ -1603,8 +1603,8 @@ async def send_login_success_email(user_email: str, user_name: str):
     logging.info(f"Attempting to send login success email to {user_email}")
     
     if not fm:
-        logging.error("Email service not configured. Please set MAIL_USERNAME and MAIL_PASSWORD in backend/.env and restart the server")
-        logging.error(f"Skipping email send for {user_email}")
+        logging.warning("Email service not configured. Login email will not be sent.")
+        logging.warning(f"Skipping email send for {user_email}. To enable, set MAIL_USERNAME and MAIL_PASSWORD in .env")
         return
     
     try:
@@ -1695,13 +1695,10 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(credentials: UserLogin, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     try:
         identifier = credentials.email.strip()
-        logging.info(f"Login attempt for identifier: {identifier}")
-        user = None
+        logging.info(f"Login attempt for: {identifier}")
         user = await find_user_by_email(identifier, db)
         if not user:
             user = await find_user_by_username(identifier, db)
-        if not user:
-            user = FALLBACK_USERS.get(identifier)
 
         if not user:
             logging.warning(f"Login failed: user not found for {identifier}")
