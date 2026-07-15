@@ -61,14 +61,8 @@ export const Shop = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/products', { timeout: 8000 });
-
-      // Robustness check: Ensure the response is JSON. This prevents crashes
-      // when the backend URL is wrong and the API returns an HTML page.
-      const contentType = response.headers['content-type'];
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError("Received non-JSON response from API. Is the backend URL correct?");
-      }
+      // The base URL is now set globally in src/index.js
+      const response = await axios.get('/api/products', { timeout: 10000 });
 
       const normalized = normalizeProducts(response.data);
       setProducts(normalized.length > 0 ? normalized : fallbackProducts);
