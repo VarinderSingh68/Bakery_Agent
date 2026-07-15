@@ -30,18 +30,35 @@ from models import Order # OrderCreate is defined in this file, but Order model 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-raw_cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
-if raw_cors_origins == ['*']:
-    cors_origins = list(set([
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3001',
-        'http://localhost:3002',
-        'http://127.0.0.1:3002',
-    ]))
-else:
-    cors_origins = raw_cors_origins
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://bakery-frontend-xiyt.onrender.com",
+]
+
+def parse_cors_origins(raw_value: Optional[str]) -> list[str]:
+    if not raw_value:
+        return DEFAULT_CORS_ORIGINS.copy()
+
+    origins = [
+        origin.strip().rstrip("/")
+        for origin in re.split(r"[,\s]+", raw_value)
+        if origin.strip()
+    ]
+
+    # Credentialed requests cannot use Access-Control-Allow-Origin: *.
+    if not origins or "*" in origins:
+        return DEFAULT_CORS_ORIGINS.copy()
+
+    return origins
+
+cors_origins = parse_cors_origins(os.environ.get("CORS_ORIGINS"))
+cors_origin_regex = os.environ.get(
+    "CORS_ORIGIN_REGEX",
+    r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?",
+).strip() or None
 
 # Password hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
@@ -107,6 +124,17 @@ except Exception as e:
 
 # Create the main app
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api")
 UPLOAD_ROOT = Path(os.environ.get("UPLOAD_DIR", ROOT_DIR / "uploads"))
 OFFER_UPLOAD_DIR = UPLOAD_ROOT / "offers"
@@ -2740,15 +2768,6 @@ async def health():
 
 # Include router
 app.include_router(api_router)
-
-# Add CORS middleware AFTER including routes
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logging.basicConfig(
     level=logging.INFO,

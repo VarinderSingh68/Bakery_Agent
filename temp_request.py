@@ -2,7 +2,7 @@ import urllib.request
 import json
 import traceback
 
-url = 'http://127.0.0.1:8000/api/auth/google/browser'
+url = 'http://localhost:8001/api/auth/google/browser'
 payload = {
     'email': 'varindersinghnony68@gmail.com',
     'name': 'Varinder',

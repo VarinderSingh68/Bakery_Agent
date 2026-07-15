@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Edit3, Eye, EyeOff, Image, Plus, Save, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import API_URL from '../lib/api';
 import { getAuthHeaders } from '../context/AuthContext';
 
 const emptyBanner = {
@@ -32,7 +31,7 @@ export const AdminBannerManager = () => {
 
   const fetchBanners = async () => {
     try {
-      const response = await axios.get(`${API_URL}/admin/banners`, {
+      const response = await axios.get('/api/admin/banners', {
         headers: getAuthHeaders(),
       });
       setBanners(Array.isArray(response.data) ? response.data : []);
@@ -65,7 +64,7 @@ export const AdminBannerManager = () => {
     const uploadData = new FormData();
     uploadData.append('file', imageFile);
 
-    const response = await axios.post(`${API_URL}/admin/banners/upload`, uploadData, {
+    const response = await axios.post('/api/admin/banners/upload', uploadData, {
       headers: getAuthHeaders(),
     });
 
@@ -90,12 +89,12 @@ export const AdminBannerManager = () => {
       };
 
       if (editingId) {
-        await axios.put(`${API_URL}/admin/banners/${editingId}`, payload, {
+        await axios.put(`/api/admin/banners/${editingId}`, payload, {
           headers: getAuthHeaders(),
         });
         toast.success('Banner updated');
       } else {
-        await axios.post(`${API_URL}/admin/banners`, payload, {
+        await axios.post('/api/admin/banners', payload, {
           headers: getAuthHeaders(),
         });
         toast.success('Banner added');
@@ -134,7 +133,7 @@ export const AdminBannerManager = () => {
   const toggleActive = async (banner) => {
     try {
       await axios.put(
-        `${API_URL}/admin/banners/${banner.id}`,
+        `/api/admin/banners/${banner.id}`,
         { active: !banner.active },
         { headers: getAuthHeaders() }
       );
@@ -148,7 +147,7 @@ export const AdminBannerManager = () => {
     if (!window.confirm(`Delete "${banner.title}"?`)) return;
 
     try {
-      await axios.delete(`${API_URL}/admin/banners/${banner.id}`, {
+      await axios.delete(`/api/admin/banners/${banner.id}`, {
         headers: getAuthHeaders(),
       });
       toast.success('Banner deleted');

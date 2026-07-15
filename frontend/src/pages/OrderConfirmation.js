@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { CheckCircle, Package, Calendar, CreditCard } from 'lucide-react';
-import API_URL from '../lib/api';
 
 export const OrderConfirmation = () => {
   const { orderNumber } = useParams();
@@ -19,7 +18,7 @@ export const OrderConfirmation = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await axios.get(`${API_URL}/orders`, {
+      const response = await axios.get('/api/orders', {
         headers: getAuthHeaders(),
         withCredentials: true
       });

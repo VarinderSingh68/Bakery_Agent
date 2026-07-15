@@ -6,7 +6,6 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { toast } from 'sonner';
-import API_URL from '../lib/api';
 import { ProductCard } from '../components/ProductCard';
 import { fallbackProducts } from '../data/fallbackProducts';
 
@@ -53,7 +52,7 @@ export const ProductDetails = () => {
     let resolvedProduct = null;
 
     try {
-      const response = await axios.get(`${API_URL}/products/${id}`, { timeout: 8000 });
+      const response = await axios.get(`/api/products/${id}`, { timeout: 8000 });
       resolvedProduct = response.data || null;
     } catch (error) {
       console.error('Failed to fetch product:', error);
@@ -63,7 +62,7 @@ export const ProductDetails = () => {
       } else {
         try {
           // Secondary fallback for direct/refresh loads: resolve from product list.
-          const allProductsResponse = await axios.get(`${API_URL}/products`, { timeout: 8000 });
+          const allProductsResponse = await axios.get('/api/products', { timeout: 8000 });
           const allProducts = normalizeProducts(allProductsResponse.data);
           resolvedProduct = allProducts.find((p) => String(p.id) === String(id)) || null;
         } catch (fallbackError) {
@@ -87,7 +86,7 @@ export const ProductDetails = () => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`${API_URL}/reviews/${id}`, { timeout: 8000 });
+      const response = await axios.get(`/api/reviews/${id}`, { timeout: 8000 });
       setReviews(response.data);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
@@ -96,7 +95,7 @@ export const ProductDetails = () => {
 
   const fetchRecommendedProducts = async (currentProduct) => {
     try {
-      const response = await axios.get(`${API_URL}/products`, { timeout: 8000 });
+      const response = await axios.get('/api/products', { timeout: 8000 });
       const allProducts = normalizeProducts(response.data);
       const sameCategory = allProducts.filter(
         (p) => p.id !== currentProduct.id && p.category === currentProduct.category
@@ -154,7 +153,7 @@ export const ProductDetails = () => {
     try {
       setSubmittingReview(true);
       await axios.post(
-        `${API_URL}/reviews`,
+        '/api/reviews',
         { product_id: id, rating, comment },
         { headers: getAuthHeaders() }
       );

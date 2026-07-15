@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ProductCard } from '../components/ProductCard';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-import API_URL from '../lib/api';
 import { fallbackProducts } from '../data/fallbackProducts';
 
 const categories = ['All', 'Cakes', 'Cupcakes', 'Pastries', 'Donuts', 'Cookies', 'Muffins', 'Breads', 'Macarons', 'Pies & Tarts', 'Brownies & Bars', 'Ice Cream & Frozen', 'Beverages', 'Gift Hampers', 'Savory', 'Custom Cakes'];
@@ -61,7 +60,7 @@ export const Shop = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/products`, { timeout: 8000 });
+      const response = await axios.get('/api/products', { timeout: 8000 });
       const normalized = normalizeProducts(response.data);
       const nextProducts = normalized.length > 0 ? normalized : fallbackProducts;
       setProducts(nextProducts);

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { BadgePercent, Eye, EyeOff, ImagePlus, Instagram, Link2, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import API_URL from '../lib/api';
 import { getAuthHeaders } from '../context/AuthContext';
 
 const emptyForm = {
@@ -31,7 +30,7 @@ export const AdminOfferMediaManager = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await axios.get(`${API_URL}/admin/offer-media`, {
+      const response = await axios.get('/api/admin/offer-media', {
         headers: getAuthHeaders(),
       });
       setItems(Array.isArray(response.data) ? response.data : []);
@@ -57,7 +56,7 @@ export const AdminOfferMediaManager = () => {
     const uploadData = new FormData();
     uploadData.append('file', imageFile);
 
-    const response = await axios.post(`${API_URL}/admin/offer-media/upload`, uploadData, {
+    const response = await axios.post('/api/admin/offer-media/upload', uploadData, {
       headers: getAuthHeaders(),
     });
 
@@ -92,7 +91,7 @@ export const AdminOfferMediaManager = () => {
         return;
       }
 
-      await axios.post(`${API_URL}/admin/offer-media`, payload, {
+      await axios.post('/api/admin/offer-media', payload, {
         headers: getAuthHeaders(),
       });
 
@@ -112,7 +111,7 @@ export const AdminOfferMediaManager = () => {
   const toggleActive = async (item) => {
     try {
       await axios.put(
-        `${API_URL}/admin/offer-media/${item.id}`,
+        `/api/admin/offer-media/${item.id}`,
         { active: !item.active },
         { headers: getAuthHeaders() }
       );
@@ -126,7 +125,7 @@ export const AdminOfferMediaManager = () => {
     if (!window.confirm(`Delete "${item.title}"?`)) return;
 
     try {
-      await axios.delete(`${API_URL}/admin/offer-media/${item.id}`, {
+      await axios.delete(`/api/admin/offer-media/${item.id}`, {
         headers: getAuthHeaders(),
       });
       toast.success('Deleted');

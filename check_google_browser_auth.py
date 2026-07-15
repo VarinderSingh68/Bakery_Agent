@@ -1,6 +1,6 @@
 import urllib.request, json, traceback
 
-url = 'http://localhost:8000/api/auth/google/browser'
+url = 'http://localhost:8001/api/auth/google/browser'
 data = json.dumps({
     'email': 'varindersinghnony68@gmail.com',
     'name': 'Varinder',

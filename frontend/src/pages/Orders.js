@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { Package, ShoppingBag } from 'lucide-react';
-import API_URL from '../lib/api';
 
 export const Orders = () => {
   const { user } = useAuth();
@@ -21,7 +20,7 @@ export const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${API_URL}/orders`, {
+      const response = await axios.get('/api/orders', {
         headers: getAuthHeaders()
       });
       setOrders(response.data);

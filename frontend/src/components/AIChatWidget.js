@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import API_URL from '../lib/api';
 
 const QUICK_PROMPTS = ['Cakes', 'Delivery', 'Custom order', 'Contact'];
 
@@ -33,7 +32,7 @@ const buildBotReply = (message) => {
 const getBotReply = async (message) => {
   try {
     const response = await axios.post(
-      `${API_URL}/chat`,
+      '/api/chat',
       { message },
       { timeout: 8000 }
     );

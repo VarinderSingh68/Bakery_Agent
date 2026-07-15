@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { BadgePercent, ExternalLink, Instagram, Sparkles } from 'lucide-react';
-import API_URL from '../lib/api';
 
 const normalizeItems = (rows) => {
   if (!Array.isArray(rows)) return [];
@@ -30,7 +29,7 @@ export const Offers = () => {
   useEffect(() => {
     const fetchOfferMedia = async () => {
       try {
-        const response = await axios.get(`${API_URL}/offer-media`, { timeout: 10000 });
+        const response = await axios.get('/api/offer-media', { timeout: 10000 });
         setItems(normalizeItems(response.data));
       } catch (error) {
         console.error('Failed to fetch offers and reels:', error);

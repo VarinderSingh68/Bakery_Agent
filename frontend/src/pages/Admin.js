@@ -24,7 +24,6 @@ import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { AnalyticsDashboard } from '../components/AnalyticsDashboard';
 import { AdminOfferMediaManager } from '../components/AdminOfferMediaManager';
 import { AdminBannerManager } from '../components/AdminBannerManager';
-import API_URL from '../lib/api';
 
 const emptyProductForm = {
   name: '',
@@ -168,9 +167,9 @@ export const Admin = () => {
     setLoading(true);
     try {
       const [statsRes, productsRes, ordersRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/stats`, { headers: getAuthHeaders() }),
-        axios.get(`${API_URL}/products`),
-        axios.get(`${API_URL}/admin/orders`, { headers: getAuthHeaders() }),
+        axios.get('/api/admin/stats', { headers: getAuthHeaders() }),
+        axios.get('/api/products'),
+        axios.get('/api/admin/orders', { headers: getAuthHeaders() }),
       ]);
       setStats(statsRes.data);
       setProducts(Array.isArray(productsRes.data) ? productsRes.data : []);
@@ -330,12 +329,12 @@ export const Admin = () => {
     setSavingProduct(true);
     try {
       if (editingProduct) {
-        await axios.put(`${API_URL}/admin/products/${editingProduct.id}`, payload, {
+        await axios.put(`/api/admin/products/${editingProduct.id}`, payload, {
           headers: getAuthHeaders(),
         });
         toast.success('Product updated');
       } else {
-        await axios.post(`${API_URL}/admin/products`, payload, {
+        await axios.post('/api/admin/products', payload, {
           headers: getAuthHeaders(),
         });
         toast.success('Product added');
@@ -354,7 +353,7 @@ export const Admin = () => {
     if (!window.confirm('Delete this product?')) return;
 
     try {
-      await axios.delete(`${API_URL}/admin/products/${productId}`, {
+      await axios.delete(`/api/admin/products/${productId}`, {
         headers: getAuthHeaders(),
       });
       toast.success('Product deleted');
@@ -367,7 +366,7 @@ export const Admin = () => {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.put(
-        `${API_URL}/admin/orders/${orderId}/status?status=${encodeURIComponent(newStatus)}`,
+        `/api/admin/orders/${orderId}/status?status=${encodeURIComponent(newStatus)}`,
         {},
         { headers: getAuthHeaders() }
       );

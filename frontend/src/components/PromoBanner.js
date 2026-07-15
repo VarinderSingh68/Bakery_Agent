@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
-import API_URL from '../lib/api';
 
 const defaultBannerSlides = [
   {
@@ -88,7 +87,7 @@ export const PromoBanner = () => {
 
     const loadBanners = async () => {
       try {
-        const response = await axios.get(`${API_URL}/banners`, { timeout: 8000 });
+        const response = await axios.get('/api/banners', { timeout: 8000 });
         const fetched = Array.isArray(response.data)
           ? response.data.map((banner, index) => ({
               id: banner.id || index,

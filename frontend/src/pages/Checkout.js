@@ -8,7 +8,7 @@ import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { CalendarIcon, CreditCard, Banknote, Building2, Tag } from 'lucide-react';
 import { format } from 'date-fns';
-import API_URL from '../lib/api';
+import { getBackendUrl } from '../lib/api';
 
 const paymentMethods = [
   { id: 'cod', name: 'Cash on Delivery', icon: Banknote },
@@ -77,7 +77,7 @@ export const Checkout = () => {
     try {
       setValidatingCoupon(true);
       const response = await axios.post(
-        `${API_URL}/coupons/validate`,
+        '/api/coupons/validate',
         { code: couponCode, total: subtotal },
         { headers: getAuthHeaders() }
       );
@@ -92,51 +92,16 @@ export const Checkout = () => {
     }
   };
 
-  const getOrderEndpoint = () => {
-    const cleanedBase = API_URL?.toString().replace(/\/+$/, '') || '';
-
-    if (cleanedBase.startsWith('http://') || cleanedBase.startsWith('https://')) {
-      return `${cleanedBase}/orders`;
-    }
-
-    return `${window.location.origin}/api/orders`;
-  };
-
   const checkBackendHealth = async () => {
     try {
-      // Try to reach the backend root or health endpoint
-      const backendUrls = [
-        `${API_URL}/health`,
-        `${window.location.origin}/api/health`,
-        `http://localhost:8000/api/health`,
-        `http://127.0.0.1:8000/api/health`,
-      ];
-
-      for (const healthUrl of backendUrls) {
-        try {
-          const response = await axios.get(healthUrl, { timeout: 3000, validateStatus: () => true });
-          console.log('[Checkout] Backend health check passed at:', healthUrl, 'Status:', response.status);
-          if (response.status === 200) {
-            return { healthy: true, url: healthUrl, message: 'Backend is reachable' };
-          }
-        } catch (e) {
-          console.warn('[Checkout] Health check failed at:', healthUrl, e.message);
-        }
+      const response = await axios.get('/api/health', { timeout: 3000, validateStatus: () => true });
+      if (response.status === 200) {
+        return { healthy: true, message: 'Backend is reachable' };
       }
-
-      // If no health endpoint responds, try a simple HEAD request to root
-      try {
-        const rootResponse = await axios.head(`${window.location.origin}/`, { timeout: 3000, validateStatus: () => true });
-        console.log('[Checkout] Backend root reachable, status:', rootResponse.status);
-        return { healthy: true, message: 'Backend appears reachable (root)', unverified: true };
-      } catch (e) {
-        console.warn('[Checkout] Backend root not reachable:', e.message);
-      }
-
-      return { healthy: false, message: 'Backend does not appear to be running on any accessible endpoint' };
+      return { healthy: false, message: `Backend health check failed with status ${response.status}` };
     } catch (error) {
       console.error('[Checkout] Unexpected error during health check:', error);
-      return { healthy: false, message: 'Unable to verify backend status' };
+      return { healthy: false, message: 'Unable to verify backend status. It might be offline.' };
     }
   };
 
@@ -148,9 +113,9 @@ export const Checkout = () => {
     const healthStatus = await checkBackendHealth();
     console.log('[Checkout] Health check result:', healthStatus);
 
-    if (!healthStatus.healthy && !healthStatus.unverified) {
+    if (!healthStatus.healthy) {
       setLoading(false);
-      const msg = healthStatus.message || 'Backend server is not responding. Please ensure it is running on port 8000.';
+      const msg = healthStatus.message || `Backend server is not responding. Please ensure it is running at ${getBackendUrl()}.`;
       toast.error(msg);
       return;
     }
@@ -179,8 +144,7 @@ export const Checkout = () => {
           coupon_code: couponCode || undefined
         };
 
-      const orderUrl = getOrderEndpoint();
-      const response = await axios.post(orderUrl, orderData, {
+      const response = await axios.post('/api/orders', orderData, {
         headers: getAuthHeaders(),
         withCredentials: true
       });
@@ -210,36 +174,7 @@ export const Checkout = () => {
       }
 
       if (error.request && !error.response) {
-        const orderUrl = getOrderEndpoint();
-        
-        // Provide detailed diagnostics
-        let diagnosticMsg = 'Network Error: Unable to reach backend server.\n\n';
-        diagnosticMsg += 'Troubleshooting steps:\n';
-        diagnosticMsg += '1. Is backend running? (python -m uvicorn server:app --host 0.0.0.0 --port 8000)\n';
-        diagnosticMsg += '2. Is backend accessible at: http://localhost:8000?\n';
-        diagnosticMsg += '3. Check browser console for CORS errors\n';
-        diagnosticMsg += `\nAttempted endpoint: ${orderUrl}`;
-        
-        console.log('[Checkout]', diagnosticMsg);
-        message = `Cannot reach order server at ${orderUrl}. Please check your network connection and ensure the backend is running on port 8000.`;
-
-        // Fallback attempt (helpful for local setups when API_URL override fails):
-        if (orderUrl !== `${window.location.origin}/api/orders`) {
-          console.log('[Checkout] Attempting fallback endpoint...');
-          try {
-            const fallbackResponse = await axios.post(`${window.location.origin}/api/orders`, orderData, {
-              headers: getAuthHeaders(),
-              withCredentials: true,
-              timeout: 10000
-            });
-            await clearCart();
-            navigate(`/order-confirmation/${fallbackResponse.data.order_number}`);
-            toast.success('Order placed successfully using local fallback endpoint!');
-            return;
-          } catch (fallbackErr) {
-            console.warn('[Checkout] Fallback order endpoint also failed', fallbackErr);
-          }
-        }
+        message = 'Network Error: Unable to reach the server. Please check your connection and try again. The server might be offline or a proxy is misconfigured.';
       }
 
       toast.error(message);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import API_URL from '../lib/api';
+import API_URL, { getBackendUrl, getGoogleRedirectUri } from '../lib/api';
 
 const GOOGLE_OAUTH_STATE_KEY = 'google_oauth_state';
 
@@ -12,9 +12,6 @@ const generateRandomString = (length = 64) => {
   window.crypto.getRandomValues(randomValues);
   return Array.from(randomValues, (value) => charset[value % charset.length]).join('');
 };
-
-const getGoogleRedirectUri = () =>
-  process.env.REACT_APP_GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback';
 
 export const Login = ({ adminOnly = false }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -79,7 +76,7 @@ export const Login = ({ adminOnly = false }) => {
       }
       navigate(from, { replace: true });
     } catch (error) {
-      const backendHost = API_URL.replace(/\/api$/, '') || 'backend';
+      const backendHost = getBackendUrl() || 'backend';
       let message = 'Authentication failed';
 
       if (error.response) {
@@ -122,9 +119,9 @@ export const Login = ({ adminOnly = false }) => {
         client_id: clientId,
         redirect_uri: redirectUrl,
         scope: 'openid email profile',
-        response_type: isLocalDev ? 'token' : 'code',
+        response_type: 'code',
         prompt: 'select_account',
-        access_type: isLocalDev ? 'online' : 'offline',
+        access_type: 'offline',
         include_granted_scopes: 'true',
         state: stateToken,
       });

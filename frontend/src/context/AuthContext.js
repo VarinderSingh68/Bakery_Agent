@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import API_URL from '../lib/api';
+import API_URL, { getBackendUrl } from '../lib/api';
 
 const AuthContext = createContext();
 const TOKEN_STORAGE_KEY = 'token';
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const backendUrl = API_URL.replace(/\/api$/, '');
+    const backendUrl = getBackendUrl();
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
         email: email.trim().toLowerCase(),
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
       if (error.response) {
         message = error.response.data?.detail || error.response.statusText || `Server error ${error.response.status}`;
       } else if (error.request && !error.response) {
-        message = `Cannot connect to backend at ${backendUrl}. Backend may not be running or CORS may be misconfigured. Check that http://localhost:8000 is accessible.`;
+        message = `Cannot connect to backend at ${backendUrl}. Backend may not be running or CORS may be misconfigured.`;
       } else if (error.code === 'ECONNABORTED') {
         message = `Request timeout connecting to ${backendUrl}. The backend may be slow or unreachable.`;
       } else if (error.message === 'Network Error') {

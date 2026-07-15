@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
-import API_URL from '../lib/api';
+import { getBackendUrl, getGoogleRedirectUri } from '../lib/api';
 
 const GOOGLE_OAUTH_STATE_KEY = 'google_oauth_state';
-
-const getGoogleRedirectUri = () =>
-  process.env.REACT_APP_GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback';
 
 const isLocalDev = () =>
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -26,7 +23,7 @@ export const AuthCallback = () => {
     if (hasProcessed.current) return;
     hasProcessed.current = true;
 
-                const processSession = async () => {
+    const processSession = async () => {
       try {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const searchParams = new URLSearchParams(window.location.search);
@@ -41,47 +38,8 @@ export const AuthCallback = () => {
           throw new Error(errorDescription || errorParam);
         }
 
-        if (!code && !accessToken && !sessionId) {
-          throw new Error('No authorization data found in callback URL');
-        }
-
         let response;
-        if (accessToken && isLocalDev()) {
-          const expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY);
-
-          if (!expectedState) {
-            throw new Error('Google sign-in session expired. Please try again.');
-          }
-
-          if (!state || state !== expectedState) {
-            throw new Error('Google sign-in state mismatch. Please try again.');
-          }
-
-          const googleProfileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-
-          if (!googleProfileResponse.ok) {
-            const errorText = await googleProfileResponse.text();
-            throw new Error(`Google profile fetch failed: ${errorText}`);
-          }
-
-          const googleProfile = await googleProfileResponse.json();
-          response = await axios.post(
-            `${API_URL}/auth/google/browser`,
-            {
-              email: googleProfile.email,
-              name: googleProfile.name,
-              picture: googleProfile.picture,
-              google_id: googleProfile.id,
-            },
-            {
-              withCredentials: true,
-            }
-          );
-        } else if (code) {
+        if (code) {
           const expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY);
 
           if (!expectedState) {
@@ -93,13 +51,14 @@ export const AuthCallback = () => {
           }
 
           response = await axios.post(
-            `${API_URL}/auth/google/callback`,
+            '/api/auth/google/callback',
             {
               code,
               redirect_uri: getGoogleRedirectUri(),
             },
             {
               withCredentials: true,
+              timeout: 30000,
             }
           );
         } else if (sessionId) {
@@ -108,10 +67,11 @@ export const AuthCallback = () => {
           }
 
           response = await axios.post(
-            `${API_URL}/auth/google/session`,
+            '/api/auth/google/session',
             {},
             {
               withCredentials: true,
+              timeout: 30000,
               headers: {
                 'X-Session-ID': sessionId
               }
@@ -139,9 +99,11 @@ export const AuthCallback = () => {
         navigate('/', { replace: true });
       } catch (error) {
         console.error('Auth callback error:', error);
-        const message =
-          error.response?.data?.detail ||
-          error.message ||
+        const backendHost = getBackendUrl();
+        const message = error.response?.data?.detail ||
+          (error.request && !error.response
+            ? `Cannot reach Google login server at ${backendHost}. Make sure the backend is running and CORS allows this frontend origin.`
+            : error.message) ||
           'Authentication failed. Please try again.';
         toast.error(message);
 
@@ -157,8 +119,10 @@ export const AuthCallback = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#C25934] border-t-transparent mb-4"></div>
-        <p className="text-[#2D241E] text-lg">Completing sign in...</p>
+        <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#C25934] border-t-transparent"></div>
+        <p className="mt-4 text-lg font-semibold text-[#2D241E]">
+          Completing sign in...
+        </p>
       </div>
     </div>
   );

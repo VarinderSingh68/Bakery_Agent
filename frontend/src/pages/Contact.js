@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-import API_URL from '../lib/api';
 
 export const Contact = () => {
   const [name, setName] = useState('');
@@ -16,7 +15,7 @@ export const Contact = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${API_URL}/contact`, { name, email, subject, message });
+      await axios.post('/api/contact', { name, email, subject, message });
       toast.success('Message sent successfully! We\'ll get back to you soon.');
       setName('');
       setEmail('');

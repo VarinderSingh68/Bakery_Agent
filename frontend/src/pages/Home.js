@@ -5,7 +5,6 @@ import { ProductCard } from '../components/ProductCard';
 import { PromoBanner } from '../components/PromoBanner';
 import { ChevronRight, Sparkles, TrendingUp, Heart } from 'lucide-react';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
-import API_URL from '../lib/api';
 import { fallbackProducts } from '../data/fallbackProducts';
 
 const categories = [
@@ -84,12 +83,12 @@ export const Home = () => {
     const loadRecommendations = async () => {
       try {
         if (user) {
-          const response = await axios.get(`${API_URL}/recommendations`, {
+          const response = await axios.get('/api/recommendations', {
             headers: getAuthHeaders()
           });
           setRecommendations(response.data);
         } else {
-          const response = await axios.get(`${API_URL}/recommendations/trending`);
+          const response = await axios.get('/api/recommendations/trending');
           setRecommendations(response.data);
         }
       } catch (error) {
@@ -125,7 +124,7 @@ export const Home = () => {
 
   const fetchFeaturedProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`, { timeout: 8000 });
+      const response = await axios.get('/api/products', { timeout: 8000 });
       const normalized = normalizeProducts(response.data);
       const products = normalized.length > 0 ? normalized : fallbackProducts;
       setFeaturedProducts(products.slice(0, 8));
