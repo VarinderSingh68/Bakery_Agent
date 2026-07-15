@@ -1809,16 +1809,27 @@ async def google_browser_login(
 ):
     logging.info(f"Google browser login start: {payload.email} {payload.google_id}")
     try:
-        user = await ensure_sql_user(
-            db,
-            {
-                "email": payload.email.strip().lower(),
+        email = payload.email.strip().lower()
+        existing_user = await crud.get_user_by_email(db, email)
+
+        if existing_user:
+            user = serialize_sqlalchemy_record(existing_user)
+        else:
+            # Create new user directly to ensure correct data types
+            user_dict = {
+                "id": str(uuid.uuid4()),
+                "email": email,
                 "name": payload.name.strip() or "User",
                 "picture": payload.picture,
                 "google_id": payload.google_id,
                 "role": "customer",
-            },
-        )
+                "created_at": datetime.now(timezone.utc),  # Ensure this is a datetime object
+                "password": None,
+                "username": None,
+                "updated_at": None,
+            }
+            created_user = await crud.create_user(db, user_dict)
+            user = serialize_sqlalchemy_record(created_user)
 
         logging.info(f"User resolved/created: {user.get('id')} ({user.get('email')})")
 
