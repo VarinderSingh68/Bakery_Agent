@@ -7,28 +7,35 @@ from models import *  # All models
 from datetime import datetime, timezone
 
 
-def _coerce_datetime(value: Any):
-    """SQLite/SQLAlchemy DateTime columns require datetime/date objects, not ISO strings."""
+def _coerce_datetime(value: Any) -> Any:
+    """SQLite/SQLAlchemy DateTime columns require datetime/date objects, not ISO strings.
+    
+    For SQLite compatibility, we return timezone-naive datetime objects.
+    SQLite doesn't store timezone info, so we convert to UTC and remove tzinfo.
+    """
     if value is None:
         return None
     if isinstance(value, datetime):
-        if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+        # Convert to UTC and remove timezone info for SQLite compatibility
+        if value.tzinfo is not None:
+            # Convert to UTC if timezone-aware
+            utc_dt = value.astimezone(timezone.utc)
+            return utc_dt.replace(tzinfo=None)
         return value
     if isinstance(value, str):
         try:
             # Handle ISO format strings with timezone info
-            # Python 3.7+ fromisoformat doesn't handle all ISO formats well
-            # Replace 'Z' with '+00:00' for UTC
+            # Replace 'Z' with '+00:00' for UTC compatibility
             cleaned_value = value.replace('Z', '+00:00')
             dt = datetime.fromisoformat(cleaned_value)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+            # Convert to UTC and remove timezone info for SQLite
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
             return dt
-        except Exception:
+        except Exception as e:
             # If parsing fails, return current time as fallback
-            logging.warning(f"Failed to parse datetime string: {value}, using current time")
-            return datetime.now(timezone.utc)
+            logging.warning(f"Failed to parse datetime string: {value}, using current time. Error: {e}")
+            return datetime.now(timezone.utc).replace(tzinfo=None)
     return None
 
 
