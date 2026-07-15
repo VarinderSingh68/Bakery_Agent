@@ -957,9 +957,16 @@ async def ensure_sql_user(db: AsyncSession, user_data: dict) -> dict:
     created_at_value = user_data.get("created_at")
     if isinstance(created_at_value, str):
         try:
-            created_at_value = datetime.fromisoformat(created_at_value)
+            # Handle ISO format strings with timezone info
+            # Replace 'Z' with '+00:00' for UTC compatibility
+            cleaned_value = created_at_value.replace('Z', '+00:00')
+            created_at_value = datetime.fromisoformat(cleaned_value)
         except Exception:
             created_at_value = None
+
+    # Ensure SQLite DateTime columns get real datetime objects (not ISO strings)
+    if isinstance(created_at_value, datetime) and created_at_value.tzinfo is None:
+        created_at_value = created_at_value.replace(tzinfo=timezone.utc)
 
     user_dict = {
         "id": user_id or str(uuid.uuid4()),
@@ -971,7 +978,11 @@ async def ensure_sql_user(db: AsyncSession, user_data: dict) -> dict:
         "picture": user_data.get("picture"),
         "google_id": user_data.get("google_id"),
         "created_at": created_at_value or datetime.now(timezone.utc),
+        # Avoid passing ISO strings into SQLite DateTime columns.
+        "updated_at": None,
     }
+
+
 
     try:
         created_user = await crud.create_user(db, user_dict)

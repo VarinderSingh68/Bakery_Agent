@@ -4,8 +4,36 @@ from sqlalchemy import select, update, delete, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any
 from models import *  # All models
+from datetime import datetime, timezone
+
+
+def _coerce_datetime(value: Any):
+    """SQLite/SQLAlchemy DateTime columns require datetime/date objects, not ISO strings."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+    if isinstance(value, str):
+        try:
+            # Handle ISO format strings with timezone info
+            # Python 3.7+ fromisoformat doesn't handle all ISO formats well
+            # Replace 'Z' with '+00:00' for UTC
+            cleaned_value = value.replace('Z', '+00:00')
+            dt = datetime.fromisoformat(cleaned_value)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except Exception:
+            # If parsing fails, return current time as fallback
+            logging.warning(f"Failed to parse datetime string: {value}, using current time")
+            return datetime.now(timezone.utc)
+    return None
+
 
 async def get_user_by_email(session: AsyncSession, email: str) -> Optional[User]:
+
     result = await session.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
@@ -18,11 +46,19 @@ async def get_user_by_id(session: AsyncSession, user_id: str) -> Optional[User]:
     return result.scalar_one_or_none()
 
 async def create_user(session: AsyncSession, user_dict: Dict[str, Any]) -> User:
+    # Belt-and-suspenders: ensure DateTime fields are actual datetime objects (not ISO strings)
+    user_dict = dict(user_dict)
+    if "created_at" in user_dict:
+        user_dict["created_at"] = _coerce_datetime(user_dict.get("created_at"))
+    if "updated_at" in user_dict:
+        user_dict["updated_at"] = _coerce_datetime(user_dict.get("updated_at"))
+
     user = User(**user_dict)
     session.add(user)
     await session.commit()
     await session.refresh(user)
     return user
+
 
 async def get_session_by_token(session: AsyncSession, token: str) -> Optional[UserSession]:
     stmt = select(UserSession).where(UserSession.session_token == token)
