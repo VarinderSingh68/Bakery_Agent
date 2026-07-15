@@ -48,11 +48,21 @@ async def get_user_by_id(session: AsyncSession, user_id: str) -> Optional[User]:
 async def create_user(session: AsyncSession, user_dict: Dict[str, Any]) -> User:
     # Belt-and-suspenders: ensure DateTime fields are actual datetime objects (not ISO strings)
     user_dict = dict(user_dict)
+    
+    # Explicitly coerce created_at
     if "created_at" in user_dict:
-        user_dict["created_at"] = _coerce_datetime(user_dict.get("created_at"))
-    if "updated_at" in user_dict:
-        user_dict["updated_at"] = _coerce_datetime(user_dict.get("updated_at"))
+        coerced = _coerce_datetime(user_dict["created_at"])
+        logging.info(f"create_user: created_at coercion: {type(user_dict['created_at'])} -> {type(coerced)}")
+        user_dict["created_at"] = coerced
+    else:
+        # If created_at is not provided, set it to now
+        user_dict["created_at"] = datetime.now(timezone.utc)
+    
+    # Explicitly coerce updated_at
+    if "updated_at" in user_dict and user_dict["updated_at"] is not None:
+        user_dict["updated_at"] = _coerce_datetime(user_dict["updated_at"])
 
+    logging.info(f"create_user: final user_dict types - created_at: {type(user_dict.get('created_at'))}")
     user = User(**user_dict)
     session.add(user)
     await session.commit()
