@@ -2013,7 +2013,7 @@ async def update_cart_quantity(product_id: str, quantity: int, db: AsyncSession 
 async def get_wishlist(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     wishlist = await crud.get_wishlist(db, user.id)
     if not wishlist:
-        return {"user_id": user.id, "product_ids": []}
+        return {"user_id": user.id, "products": []}
     product_ids = wishlist.product_ids or []
     products = await crud.get_products(db)
     products = [p for p in products if p.id in product_ids]

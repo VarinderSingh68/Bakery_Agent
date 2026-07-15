@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ProductCard } from '../components/ProductCard';
+import { toast } from 'sonner';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fallbackProducts } from '../data/fallbackProducts';
 
@@ -61,13 +62,21 @@ export const Shop = () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/products', { timeout: 8000 });
+
+      // Robustness check: Ensure the response is JSON. This prevents crashes
+      // when the backend URL is wrong and the API returns an HTML page.
+      const contentType = response.headers['content-type'];
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError("Received non-JSON response from API. Is the backend URL correct?");
+      }
+
       const normalized = normalizeProducts(response.data);
-      const nextProducts = normalized.length > 0 ? normalized : fallbackProducts;
-      setProducts(nextProducts);
-      setLoading(false);
+      setProducts(normalized.length > 0 ? normalized : fallbackProducts);
     } catch (error) {
       console.error('Failed to fetch products:', error);
+      toast.error(error.message || 'Could not load products. The backend might be offline.');
       setProducts(fallbackProducts);
+    } finally {
       setLoading(false);
     }
   };
