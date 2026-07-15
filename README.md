@@ -1,192 +1,70 @@
-# Bakery E-commerce Application
+# Getting Started with Create React App
 
-This project is a full-stack e-commerce application for a bakery, featuring product browsing, shopping cart functionality, order management, and user authentication. It includes both a Python backend (FastAPI) and a React frontend.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Table of Contents
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-  - [1. Backend Setup](#1-backend-setup)
-  - [2. Frontend Setup](#2-frontend-setup)
-- [Test Credentials](#test-credentials)
-- [Troubleshooting](#troubleshooting)
-- [API Endpoints](#api-endpoints)
-- [Using Batch Files](#using-batch-files)
-- [Production Deployment](#production-deployment)
-- [Support](#support)
+## Available Scripts
 
-## Features
+In the project directory, you can run:
 
-- ✅ User Authentication (Register/Login)
-- ✅ Product Management
-- ✅ Shopping Cart
-- ✅ Order Management
-- ✅ Admin Dashboard
-- ✅ Mock Email System
-- ✅ Database Persistence
-- ✅ Responsive UI
+### `npm start`
 
-## Technologies Used
+Runs the app in the development mode.\
+Open http://localhost:3001 to view it in your browser.
 
-### Backend
-- Python 3.8+
-- FastAPI (for API development)
-- SQLAlchemy (for ORM and database interactions)
-- SQLite (for local development database)
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-### Frontend
-- React.js
-- Tailwind CSS
-- npm/yarn
+### `npm test`
 
-## Prerequisites
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-- Python 3.8+
-- Node.js 14+
-- npm or yarn
+### `npm run build`
 
-## Quick Start
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-Follow these steps to get the Bakery E-commerce application up and running on your local machine.
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-### 1. Backend Setup
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-```bash
-# Navigate to backend directory
-cd backend
+### `npm run eject`
 
-# Install Python dependencies
-pip install -r requirements.txt
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-# Initialize database (creates tables)
-python init_db.py
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-# Seed authentication users (creates admin and test users)
-python seed_auth_users.py
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-# Start the backend server
-python server.py
-```
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-**Backend will run on:** `http://localhost:8000`
+## Learn More
 
-### 2. Frontend Setup
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-```bash
-# Navigate to frontend directory (open new terminal)
-cd frontend
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-# Install Node dependencies
-npm install
+### Code Splitting
 
-# Start the frontend development server
-npm start
-```
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-**Frontend will run on:** `http://localhost:3000`
+### Analyzing the Bundle Size
 
-## Test Credentials
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-After running `seed_auth_users.py`, you can log in with:
+### Making a Progressive Web App
 
--   **Admin Account:**
-    -   Email: `admin@bakery.com`
-    -   Password: `admin123`
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
--   **Test User Account:**
-    -   Email: `user@bakery.com`
-    -   Password: `user123`
+### Advanced Configuration
 
-## Troubleshooting
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Database Issues
+### Deployment
 
-If you encounter database errors, you can reset the database:
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-```bash
-cd backend
-# Remove old database files
-del bakery.db bakery.db-shm bakery.db-wal
-# Recreate database
-python init_db.py
-# Re-seed users
-python seed_auth_users.py
-```
+### `npm run build` fails to minify
 
-### Port Already in Use
-
-If ports 8000 (backend) or 3000 (frontend) are already in use, you can kill the process occupying them:
-
-**Backend (port 8000):**
-```bash
-# Kill process using port 8000
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-```
-
-**Frontend (port 3000):**
-```bash
-# Kill process using port 3000
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-```
-
-### Email Configuration
-
-The application uses a mock email system for testing. No actual emails are sent. Email functionality is simulated in the backend.
-
-### Authentication Issues
-
-If login fails:
-1.  Ensure backend is running on `http://localhost:8000`
-2.  Check that users are seeded: `python backend/seed_auth_users.py`
-3.  Verify database exists: `backend/bakery.db`
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user
-
-### Products
-- `GET /api/products` - List all products
-- `GET /api/products/{id}` - Get product details
-- `POST /api/products` - Create product (admin)
-- `PUT /api/products/{id}` - Update product (admin)
-- `DELETE /api/products/{id}` - Delete product (admin)
-
-### Orders
-- `GET /api/orders` - List user orders
-- `POST /api/orders` - Create new order
-- `GET /api/orders/{id}` - Get order details
-
-### Cart
-- `GET /api/cart` - Get cart items
-- `POST /api/cart/items` - Add item to cart
-- `DELETE /api/cart/items/{id}` - Remove item from cart
-
-## Using Batch Files
-
-You can also use the provided batch files for convenience:
-
-```bash
-# Start backend
-start-backend.bat
-
-# Start frontend (in new terminal)
-start-frontend.bat
-```
-
-## Production Deployment
-
-For production deployment, refer to `deploy.yml` for Docker deployment configuration.
-
-## Support
-
-If you encounter any issues not covered in this guide, please check:
-- `GOOGLE_OAUTH_FIX.md` - For OAuth related issues
-- `NETWORK_ERROR_FIXES.md` - For network connectivity issues
-- `TODO.md` - For known issues and planned features
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

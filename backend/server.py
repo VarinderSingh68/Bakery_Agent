@@ -41,17 +41,13 @@ DEFAULT_CORS_ORIGINS = [
 def parse_cors_origins(raw_value: Optional[str]) -> list[str]:
     if not raw_value:
         return DEFAULT_CORS_ORIGINS.copy()
-
     origins = [
         origin.strip().rstrip("/")
         for origin in re.split(r"[,\s]+", raw_value)
         if origin.strip()
     ]
-
-    # Credentialed requests cannot use Access-Control-Allow-Origin: *.
     if not origins or "*" in origins:
         return DEFAULT_CORS_ORIGINS.copy()
-
     return origins
 
 cors_origins = parse_cors_origins(os.environ.get("CORS_ORIGINS"))
