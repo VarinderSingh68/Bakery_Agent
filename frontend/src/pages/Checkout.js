@@ -77,7 +77,7 @@ export const Checkout = () => {
     try {
       setValidatingCoupon(true);
       const response = await axios.post(
-        '/api/coupons/validate',
+        `${getBackendUrl()}/api/coupons/validate`,
         { code: couponCode, total: subtotal },
         { headers: getAuthHeaders() }
       );
@@ -94,7 +94,7 @@ export const Checkout = () => {
 
   const checkBackendHealth = async () => {
     try {
-      const response = await axios.get('/api/health', { timeout: 3000, validateStatus: () => true });
+      const response = await axios.get(`${getBackendUrl()}/api/health`, { timeout: 3000, validateStatus: () => true });
       if (response.status === 200) {
         return { healthy: true, message: 'Backend is reachable' };
       }
@@ -144,7 +144,7 @@ export const Checkout = () => {
           coupon_code: couponCode || undefined
         };
 
-      const response = await axios.post('/api/orders', orderData, {
+      const response = await axios.post(`${getBackendUrl()}/api/orders`, orderData, {
         headers: getAuthHeaders(),
         withCredentials: true
       });
