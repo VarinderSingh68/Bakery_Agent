@@ -75,14 +75,9 @@ export const Checkout = () => {
     if (!couponCode) return;
 
     try {
-      const backendUrl = getBackendUrl();
-      if (!backendUrl) {
-        toast.error('Backend URL is not configured. Please check your environment settings.');
-        return;
-      }
       setValidatingCoupon(true);
       const response = await axios.post(
-        `${backendUrl}/api/coupons/validate`,
+        '/api/coupons/validate',
         { code: couponCode, total: subtotal },
         { headers: getAuthHeaders() }
       );
@@ -98,12 +93,9 @@ export const Checkout = () => {
   };
 
   const checkBackendHealth = async () => {
-    const backendUrl = getBackendUrl();
-    if (!backendUrl) {
-      return { healthy: false, message: 'Backend URL is not configured. Please check your environment settings.' };
-    }
+    // Rely on axios.defaults.baseURL being set globally
     try {
-      const response = await axios.get(`${backendUrl}/api/health`, { timeout: 3000, validateStatus: () => true });
+      const response = await axios.get('/api/health', { timeout: 3000, validateStatus: () => true });
       if (response.status === 200) {
         return { healthy: true, message: 'Backend is reachable' };
       }
@@ -116,13 +108,6 @@ export const Checkout = () => {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
-
-    const backendUrl = getBackendUrl();
-    if (!backendUrl) {
-      setLoading(false);
-      toast.error('Backend URL is not configured. Please check your environment settings.');
-      return;
-    }
     setLoading(true);
 
     // Perform preflight health check
@@ -131,7 +116,7 @@ export const Checkout = () => {
 
     if (!healthStatus.healthy) {
       setLoading(false);
-      const msg = healthStatus.message || `Backend server is not responding. Please ensure it is running at ${backendUrl}.`;
+      const msg = healthStatus.message || `Backend server is not responding. Please ensure it is running.`;
       toast.error(msg);
       return;
     }
@@ -160,7 +145,7 @@ export const Checkout = () => {
           coupon_code: couponCode || undefined
         };
 
-      const response = await axios.post(`${backendUrl}/api/orders`, orderData, {
+      const response = await axios.post('/api/orders', orderData, {
         headers: getAuthHeaders(),
         withCredentials: true
       });
@@ -190,7 +175,7 @@ export const Checkout = () => {
       }
 
       if (error.request && !error.response) {
-        message = `Network Error: Unable to reach the server at ${backendUrl}. Please check your connection and try again. The server might be offline or a proxy is misconfigured.`;
+        message = `Network Error: Unable to reach the server. Please check your connection and try again. The server might be offline or a proxy is misconfigured.`;
       }
 
       toast.error(message);
