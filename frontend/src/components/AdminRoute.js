@@ -1,27 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-
-// This is a mock auth hook. Replace with your actual auth context/hook.
-// It should return an object like { user: { role: 'admin' | 'customer' }, isAuthenticated: boolean, isLoading: boolean }
-import { useAuth } from '../hooks/useAuth'; // Assuming you have a custom auth hook
+import { useAuth } from '../hooks/useAuth';
+import api from '../services/api'; // Assuming you have a configured axios instance
 
 const AdminRoute = ({ children }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
+  const [adminData, setAdminData] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  if (isLoading) {
-    // Show a loading spinner or a blank page while auth state is being determined
+  useEffect(() => {
+    if (authIsLoading) {
+      return; // Wait for authentication check to complete
+    }
+
+    if (!isAuthenticated || user?.role !== 'admin') {
+      setIsLoading(false);
+      return; // Auth guard will handle redirect
+    }
+
+    const fetchAdminData = async () => {
+      try {
+        // Fetch both dashboard stats and the full product list for the admin panel
+        const [statsResponse, productsResponse] = await Promise.all([
+          api.get('/api/admin/stats'), // For dashboard summary
+          api.get('/api/admin/products') // For product management
+        ]);
+        setAdminData(statsResponse.data);
+        setProducts(productsResponse.data);
+      } catch (err) {
+        setError('Failed to load admin data. Please ensure you are logged in as an admin and try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, [authIsLoading, isAuthenticated, user]);
+
+  if (authIsLoading || isLoading) {
     return <div>Loading...</div>;
   }
 
   if (!isAuthenticated || user?.role !== 'admin') {
-    // Redirect them to the home page if they are not an authenticated admin.
-    // We replace the current entry in the history stack so the user can't
-    // use the back button to get back to the admin page.
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
-  return children;
+  if (error) {
+    return <div className="text-red-500 text-center p-4">{error}</div>;
+  }
+
+  // Pass adminData and the product list to children components
+  return React.cloneElement(children, { adminData, products });
 };
 
 export default AdminRoute;
