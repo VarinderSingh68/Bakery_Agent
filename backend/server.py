@@ -1695,11 +1695,17 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(credentials: UserLogin, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     try:
         identifier = credentials.email.strip()
+        password = credentials.password
         logging.info(f"Login attempt for: {identifier}")
-        user = await find_user_by_email(identifier, db)
-        if not user:
-            user = await find_user_by_username(identifier, db)
-
+        
+        # Special handling for the admin user defined in environment variables
+        if identifier.lower() == ADMIN_LOGIN_EMAIL.lower():
+            user = FALLBACK_USERS.get(ADMIN_LOGIN_EMAIL)
+        else:
+            user = await find_user_by_email(identifier, db)
+            if not user:
+                user = await find_user_by_username(identifier, db)
+        
         if not user:
             logging.warning(f"Login failed: user not found for {identifier}")
             raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -1709,7 +1715,7 @@ async def login(credentials: UserLogin, background_tasks: BackgroundTasks, db: A
             logging.warning(f"Login failed: {identifier} is a Google OAuth account")
             raise HTTPException(status_code=401, detail="This account uses Google login. Please use 'Continue with Google' instead.")
 
-        if not verify_password(credentials.password, user["password"]):
+        if not verify_password(password, user["password"]):
             logging.warning(f"Login failed: invalid password for {identifier}")
             raise HTTPException(status_code=401, detail="Invalid email or password")
 

@@ -189,6 +189,7 @@ export const Admin = () => {
 
   useEffect(() => {
     if (authLoading) return;
+    // AdminRoute already guards this page, but keep as safety net
     if (!user) {
       navigate('/admin-login', { replace: true });
       return;

@@ -21,6 +21,8 @@ import { OrderConfirmation } from './pages/OrderConfirmation';
 import { Contact } from './pages/Contact';
 import { Offers } from './pages/Offers';
 import { Admin } from './pages/Admin';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 
 const hasOAuthCallbackParams = (location) => {
@@ -59,12 +61,12 @@ function AppRouter() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin-login" element={<Login adminOnly />} />
+          <Route path="/admin-login" element={<AdminLoginPage />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/offers" element={<Offers />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </main>
