@@ -17,16 +17,17 @@ const AdminRoute = ({ children }) => {
     }
 
     if (!isAuthenticated || user?.role !== 'admin') {
+      // Not an admin, no need to fetch data. Stop loading and let the redirect handle it.
       setIsLoading(false);
-      return; // Auth guard will handle redirect
+      return;
     }
 
     const fetchAdminData = async () => {
       try {
         // Fetch both dashboard stats and the full product list for the admin panel
         const [statsResponse, productsResponse] = await Promise.all([
-          api.get('/api/admin/stats'), // For dashboard summary
-          api.get('/api/admin/products') // For product management
+          api.get('/api/admin/stats'),      // For dashboard summary
+          api.get('/api/admin/products')  // For product management
         ]);
         setAdminData(statsResponse.data);
         setProducts(productsResponse.data);
@@ -37,6 +38,7 @@ const AdminRoute = ({ children }) => {
       }
     };
 
+    // Only fetch data if the user is a confirmed admin
     fetchAdminData();
   }, [authIsLoading, isAuthenticated, user]);
 
@@ -45,7 +47,8 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated || user?.role !== 'admin') {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // Redirect to a dedicated admin login page instead of the homepage.
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   if (error) {
