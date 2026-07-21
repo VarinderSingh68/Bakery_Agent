@@ -126,6 +126,7 @@ except Exception as e:
 app = FastAPI()
 
 # Add CORS middleware
+logging.info(f"CORS origins configured: {cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
