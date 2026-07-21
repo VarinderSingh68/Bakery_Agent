@@ -57,6 +57,10 @@ cors_origin_regex = os.environ.get(
 ).strip() or None
 
 # Password hashing
+# Explicitly ensure the deployed frontend URL is in the list
+if "https://bakery-frontend-xiyt.onrender.com" not in cors_origins:
+    cors_origins.append("https://bakery-frontend-xiyt.onrender.com")
+
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 # JWT settings
