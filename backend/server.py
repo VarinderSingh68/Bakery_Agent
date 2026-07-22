@@ -35,7 +35,7 @@ DEFAULT_CORS_ORIGINS = [
     "http://127.0.0.1:3001",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://bakery-frontend-xiyt.onrender.com",
+    # Add your deployed Render frontend URL here or via CORS_ORIGINS env var
 ]
 
 def parse_cors_origins(raw_value: Optional[str]) -> list[str]:
@@ -51,15 +51,7 @@ def parse_cors_origins(raw_value: Optional[str]) -> list[str]:
     return origins
 
 cors_origins = parse_cors_origins(os.environ.get("CORS_ORIGINS"))
-cors_origin_regex = os.environ.get(
-    "CORS_ORIGIN_REGEX",
-    r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?",
-).strip() or None
-
-# Password hashing
-# Explicitly ensure the deployed frontend URL is in the list
-if "https://bakery-frontend-xiyt.onrender.com" not in cors_origins:
-    cors_origins.append("https://bakery-frontend-xiyt.onrender.com")
+cors_origin_regex = os.environ.get("CORS_ORIGIN_REGEX", r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?",).strip() or None
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
