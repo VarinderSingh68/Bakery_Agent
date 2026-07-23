@@ -21,9 +21,9 @@ from jinja2 import Template
 import httpx
 import hashlib
 import secrets
-import json
 import re
-from database import get_db, engine, Base, AsyncSessionLocal
+import json, sqlite3
+from database import get_db, engine, Base, AsyncSessionLocal, ACTIVE_DB_PATH
 import crud
 from models import Order # OrderCreate is defined in this file, but Order model is imported
 
@@ -47,11 +47,11 @@ def parse_cors_origins(raw_value: Optional[str]) -> list[str]:
         if origin.strip()
     ]
     if not origins or "*" in origins:
-        return DEFAULT_CORS_ORIGINS.copy()
+        logging.warning("CORS_ORIGINS is empty or contains '*'. Falling back to default origins for security: %s", DEFAULT_CORS_ORIGINS)
+        return DEFAULT_CORS_ORIGINS
     return origins
 
 cors_origins = parse_cors_origins(os.environ.get("CORS_ORIGINS"))
-cors_origin_regex = os.environ.get("CORS_ORIGIN_REGEX", r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?",).strip() or None
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
@@ -77,6 +77,7 @@ fm = None
 EMAIL_CONFIGURED = False
 if MAIL_USERNAME and MAIL_PASSWORD:
     try:
+        logging.info(f"Attempting to configure email with server: {MAIL_SERVER}:{MAIL_PORT}, user: {MAIL_USERNAME}")
         conf = ConnectionConfig(
             MAIL_USERNAME=MAIL_USERNAME,
             MAIL_PASSWORD=MAIL_PASSWORD,
@@ -90,6 +91,7 @@ if MAIL_USERNAME and MAIL_PASSWORD:
         )
         fm = FastMail(conf)
         EMAIL_CONFIGURED = True
+        logging.info("Email service configured successfully.")
     except Exception as e:
         logging.warning(f"Email configuration failed: {e}")
 else:
@@ -118,7 +120,7 @@ except Exception as e:
 app = FastAPI()
 
 # Add CORS middleware
-logging.info(f"CORS origins configured: {cors_origins}")
+logging.warning(f"CORS middleware configured to allow origins: {cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -1591,7 +1593,9 @@ async def send_order_email(order: Order):
         )
         await fm.send_message(admin_message)
         
-        logging.info(f"Order confirmation emails sent for {order.order_number}")
+        logging.info(f"Order confirmation email task sent for {order.order_number} via {MAIL_SERVER}")
+        if "ethereal.email" in MAIL_SERVER:
+            logging.warning("Using Ethereal test email. Check your Ethereal account inbox, not your personal email.")
     except Exception as e:
         logging.error(f"Failed to send order email: {str(e)}")
 
@@ -1599,7 +1603,6 @@ async def send_login_success_email(user_email: str, user_name: str):
     logging.info(f"Attempting to send login success email to {user_email}")
     
     if not fm:
-        logging.warning("Email service not configured. Login email will not be sent.")
         logging.warning(f"Skipping email send for {user_email}. To enable, set MAIL_USERNAME and MAIL_PASSWORD in .env")
         return
     
@@ -1652,10 +1655,11 @@ async def send_login_success_email(user_email: str, user_name: str):
         )
         await fm.send_message(message)
         
-        logging.info(f"Login success email sent to {user_email}")
+        logging.info(f"Login success email task sent to {user_email} via {MAIL_SERVER}.")
+        if "ethereal.email" in MAIL_SERVER:
+            logging.warning("Using Ethereal test email. Check your Ethereal account inbox, not your personal email.")
     except Exception as e:
         logging.error(f"Failed to send login success email to {user_email}: {str(e)}")
-        logging.info(f"Email content that failed to send: {html_content[:500]}...")
 
 # Auth endpoints
 @api_router.post("/auth/register")
@@ -2102,13 +2106,15 @@ async def create_order(order_data: OrderCreate, background_tasks: BackgroundTask
             return order
         except Exception as e:
             logging.warning(f"MongoDB order creation failed, using SQL fallback: {e}")
-    db_order_payload = {
-        "id": order_dict["id"],
+    
+    # Prepare payload for SQL, ensuring correct types for SQLAlchemy
+    sql_order_payload = {
+        "id": order_dict["id"], # Use the ID generated earlier
         "user_id": order_dict["user_id"],
         "user_name": order_dict["user_name"],
         "user_email": order_dict["user_email"],
         "order_number": order_dict["order_number"],
-        "items_json": order_dict["items"],
+        "items_json": order_dict["items"], # This is already List[dict] from model_dump()
         "subtotal": order_dict["subtotal"],
         "shipping_cost": order_dict["shipping_cost"],
         "tax": order_dict["tax"],
@@ -2122,10 +2128,10 @@ async def create_order(order_data: OrderCreate, background_tasks: BackgroundTask
         "shipping_zip": order_dict["shipping_zip"],
         "coupon_code": order_dict.get("coupon_code"),
         "status": order_dict["status"],
-        "created_at": datetime.now(timezone.utc),  # Pass datetime object, not string
+        "created_at": datetime.now(timezone.utc),  # Explicitly pass datetime object for SQL
     }
 
-    await crud.create_order(db_session, db_order_payload)
+    await crud.create_order(db_session, sql_order_payload)
     
     # Clear cart (SQL)
     await crud.upsert_cart(db_session, user.id, [], 0.0)
@@ -2785,6 +2791,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def ensure_coupon_code_column():
+    """SQLite migration: add coupon_code column to orders table if missing."""
+    # This is a synchronous operation, but it's quick and runs only at startup.
+    try:
+        if not ACTIVE_DB_PATH.exists():
+            logging.info("DB Check: Database file does not exist yet. Skipping coupon_code check.")
+            return
+
+        conn = sqlite3.connect(ACTIVE_DB_PATH)
+        cursor = conn.cursor()
+        
+        # Check if 'orders' table exists first
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='orders';")
+        if cursor.fetchone() is None:
+            logging.info("DB Check: 'orders' table does not exist yet. Skipping coupon_code check.")
+            conn.close()
+            return
+
+        cursor.execute("PRAGMA table_info(orders)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "coupon_code" not in columns:
+            logging.warning("MIGRATION: 'coupon_code' column not found in 'orders' table. Adding it now.")
+            cursor.execute("ALTER TABLE orders ADD COLUMN coupon_code TEXT")
+            conn.commit()
+            logging.info("MIGRATION: Successfully added 'coupon_code' column to 'orders' table.")
+    except Exception as e:
+        logging.error(f"MIGRATION: Error while checking/adding 'coupon_code' column: {e}", exc_info=True)
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 async def ensure_default_admin_account():
     admin_hash = hash_password(ADMIN_LOGIN_PASSWORD)
@@ -2869,6 +2905,7 @@ async def root():
 
 @app.on_event("startup")
 async def ensure_database_tables():
+    ensure_coupon_code_column()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await ensure_default_admin_account()
