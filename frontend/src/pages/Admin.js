@@ -7,6 +7,7 @@ import {
   DollarSign,
   Edit3,
   Image,
+  LineChart,
   Layers3,
   LogOut,
   Mail,
@@ -16,13 +17,32 @@ import {
   RefreshCw,
   Save,
   Search,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  ShieldOff,
   ShoppingCart,
+  Star,
   Ticket,
   Trash2,
   TrendingUp,
   Users,
   X,
 } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart as RechartsLineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { toast } from 'sonner';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { AnalyticsDashboard } from '../components/AnalyticsDashboard';
@@ -165,11 +185,27 @@ const navSections = [
   { id: 'categories', label: 'Categories', icon: Layers3 },
   { id: 'coupons', label: 'Coupons', icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'reviews', label: 'Reviews', icon: Star },
   { id: 'messages', label: 'Messages', icon: Mail },
   { id: 'banners', label: 'Banners', icon: Image },
   { id: 'offer-media', label: 'Offers & Reels', icon: BadgePercent },
-  { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+  { id: 'reports', label: 'Reports', icon: LineChart },
+  { id: 'analytics', label: 'Site Analytics', icon: TrendingUp },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
+
+const CHART_COLORS = ['#C25934', '#4A6B53', '#B98A2F', '#5B7C99', '#8E6C9E', '#D18A5C'];
+
+const emptySettingsForm = {
+  store_name: '',
+  tagline: '',
+  support_email: '',
+  support_phone: '',
+  address: '',
+  facebook_url: '',
+  instagram_url: '',
+  twitter_url: '',
+};
 
 const formatCurrency = (value) => `₹${Number(value || 0).toFixed(0)}`;
 
@@ -238,18 +274,26 @@ export const Admin = () => {
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [couponForm, setCouponForm] = useState(emptyCouponForm);
 
+  const [reviews, setReviews] = useState([]);
+
+  const [settingsForm, setSettingsForm] = useState(emptySettingsForm);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   const [pendingDelete, setPendingDelete] = useState(null); // { type, id, label }
+  const [pendingRoleChange, setPendingRoleChange] = useState(null); // { id, name, nextRole }
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [statsRes, productsRes, ordersRes, usersRes, couponsRes, contactsRes] = await Promise.all([
+      const [statsRes, productsRes, ordersRes, usersRes, couponsRes, contactsRes, reviewsRes, settingsRes] = await Promise.all([
         axios.get('/api/admin/stats', { headers: getAuthHeaders() }),
         axios.get('/api/products'),
         axios.get('/api/admin/orders', { headers: getAuthHeaders() }),
         axios.get('/api/admin/users', { headers: getAuthHeaders() }),
         axios.get('/api/admin/coupons', { headers: getAuthHeaders() }),
         axios.get('/api/admin/contacts', { headers: getAuthHeaders() }),
+        axios.get('/api/admin/reviews', { headers: getAuthHeaders() }),
+        axios.get('/api/settings'),
       ]);
       setStats(statsRes.data);
       setProducts(Array.isArray(productsRes.data) ? productsRes.data : []);
@@ -257,6 +301,10 @@ export const Admin = () => {
       setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
       setCoupons(Array.isArray(couponsRes.data) ? couponsRes.data : []);
       setContacts(Array.isArray(contactsRes.data) ? contactsRes.data : []);
+      setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : []);
+      if (settingsRes.data) {
+        setSettingsForm({ ...emptySettingsForm, ...settingsRes.data });
+      }
     } catch (error) {
       console.error('Failed to fetch admin data:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -348,6 +396,68 @@ export const Admin = () => {
     });
     return map;
   }, [orders]);
+
+  const revenueTrend = useMemo(() => {
+    const days = 14;
+    const buckets = [];
+    const dayKey = (date) => date.toISOString().slice(0, 10);
+    const totalsByDay = {};
+    orders.forEach((order) => {
+      if (!order.created_at) return;
+      const key = dayKey(new Date(order.created_at));
+      totalsByDay[key] = (totalsByDay[key] || 0) + Number(order.total || 0);
+    });
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - i);
+      const key = dayKey(date);
+      buckets.push({
+        date: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        revenue: Math.round(totalsByDay[key] || 0),
+      });
+    }
+    return buckets;
+  }, [orders]);
+
+  const topProducts = useMemo(() => {
+    const totals = {};
+    orders.forEach((order) => {
+      (Array.isArray(order.items) ? order.items : []).forEach((item) => {
+        const key = item.name || item.product_id;
+        const revenue = Number(item.price || 0) * Number(item.quantity || 0);
+        totals[key] = (totals[key] || 0) + revenue;
+      });
+    });
+    return Object.entries(totals)
+      .map(([name, revenue]) => ({ name, revenue: Math.round(revenue) }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6);
+  }, [orders]);
+
+  const categoryRevenue = useMemo(() => {
+    const productCategoryById = {};
+    products.forEach((product) => {
+      productCategoryById[product.id] = product.category || 'Other';
+    });
+    const totals = {};
+    orders.forEach((order) => {
+      (Array.isArray(order.items) ? order.items : []).forEach((item) => {
+        const category = productCategoryById[item.product_id] || 'Other';
+        const revenue = Number(item.price || 0) * Number(item.quantity || 0);
+        totals[category] = (totals[category] || 0) + revenue;
+      });
+    });
+    return Object.entries(totals)
+      .map(([name, value]) => ({ name, value: Math.round(value) }))
+      .sort((a, b) => b.value - a.value);
+  }, [orders, products]);
+
+  const productNameById = useMemo(() => {
+    const map = {};
+    products.forEach((product) => { map[product.id] = product.name; });
+    return map;
+  }, [products]);
 
   const updateProductForm = (field, value) => {
     setProductForm((current) => ({ ...current, [field]: value }));
@@ -617,6 +727,16 @@ export const Admin = () => {
     }
   };
 
+  const performDeleteReview = async (reviewId) => {
+    try {
+      await axios.delete(`/api/admin/reviews/${reviewId}`, { headers: getAuthHeaders() });
+      toast.success('Review deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete review');
+    }
+  };
+
   const handleConfirmedDelete = () => {
     if (!pendingDelete) return;
     const { type, id } = pendingDelete;
@@ -624,6 +744,42 @@ export const Admin = () => {
     if (type === 'product') performDeleteProduct(id);
     else if (type === 'coupon') performDeleteCoupon(id);
     else if (type === 'contact') performDeleteContact(id);
+    else if (type === 'review') performDeleteReview(id);
+  };
+
+  const handleSettingsSubmit = async (event) => {
+    event.preventDefault();
+    setSavingSettings(true);
+    try {
+      const response = await axios.put('/api/admin/settings', settingsForm, { headers: getAuthHeaders() });
+      setSettingsForm({ ...emptySettingsForm, ...response.data });
+      toast.success('Store settings updated');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to save settings');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const updateSettingsField = (field, value) => {
+    setSettingsForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const performRoleChange = async (userId, nextRole) => {
+    try {
+      await axios.put(`/api/admin/users/${userId}/role`, { role: nextRole }, { headers: getAuthHeaders() });
+      toast.success(nextRole === 'admin' ? 'Promoted to admin' : 'Admin access revoked');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update role');
+    }
+  };
+
+  const handleConfirmedRoleChange = () => {
+    if (!pendingRoleChange) return;
+    const { id, nextRole } = pendingRoleChange;
+    setPendingRoleChange(null);
+    performRoleChange(id, nextRole);
   };
 
   const handleLogout = async () => {
@@ -1529,41 +1685,119 @@ export const Admin = () => {
                         <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D241E]">Role</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D241E]">Orders</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D241E]">Spent</th>
-                        <th className="rounded-r-lg px-4 py-3 text-left text-sm font-semibold text-[#2D241E]">Joined</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D241E]">Joined</th>
+                        <th className="rounded-r-lg px-4 py-3 text-right text-sm font-semibold text-[#2D241E]">Access</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E3DCCF]">
-                      {users.map((customer) => (
-                        <tr key={customer.id} className="hover:bg-[#FDFBF7]">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {customer.picture ? (
-                                <img src={customer.picture} alt={customer.name} className="h-9 w-9 rounded-full object-cover" />
-                              ) : (
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3EFE6] font-bold text-[#C25934]">
-                                  {(customer.name || '?').charAt(0).toUpperCase()}
+                      {users.map((customer) => {
+                        const isSelf = customer.id === user.id;
+                        const isPrimaryAdmin = customer.id === 'fallback-admin';
+                        return (
+                          <tr key={customer.id} className="hover:bg-[#FDFBF7]">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                {customer.picture ? (
+                                  <img src={customer.picture} alt={customer.name} className="h-9 w-9 rounded-full object-cover" />
+                                ) : (
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3EFE6] font-bold text-[#C25934]">
+                                    {(customer.name || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-[#2D241E]">{customer.name}</p>
+                                  <p className="truncate text-xs text-[#8A7E74]">{customer.email}</p>
                                 </div>
-                              )}
-                              <div className="min-w-0">
-                                <p className="truncate font-semibold text-[#2D241E]">{customer.name}</p>
-                                <p className="truncate text-xs text-[#8A7E74]">{customer.email}</p>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize ${
-                              customer.role === 'admin' ? 'bg-[#C25934]/10 text-[#C25934]' : 'bg-[#F3EFE6] text-[#5C4B40]'
-                            }`}>
-                              {customer.role}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-[#2D241E]">{orderCountByUser[customer.id] || 0}</td>
-                          <td className="px-4 py-3 font-semibold text-[#C25934]">{formatCurrency(revenueByUser[customer.id] || 0)}</td>
-                          <td className="px-4 py-3 text-[#5C4B40]">{formatDate(customer.created_at)}</td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize ${
+                                customer.role === 'admin' ? 'bg-[#C25934]/10 text-[#C25934]' : 'bg-[#F3EFE6] text-[#5C4B40]'
+                              }`}>
+                                {customer.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-[#2D241E]">{orderCountByUser[customer.id] || 0}</td>
+                            <td className="px-4 py-3 font-semibold text-[#C25934]">{formatCurrency(revenueByUser[customer.id] || 0)}</td>
+                            <td className="px-4 py-3 text-[#5C4B40]">{formatDate(customer.created_at)}</td>
+                            <td className="px-4 py-3 text-right">
+                              {isSelf ? (
+                                <span className="text-xs text-[#8A7E74]">You</span>
+                              ) : isPrimaryAdmin && customer.role === 'admin' ? (
+                                <span className="text-xs text-[#8A7E74]">Primary admin</span>
+                              ) : customer.role === 'admin' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setPendingRoleChange({ id: customer.id, name: customer.name, nextRole: 'customer' })}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#E3DCCF] px-3 py-1.5 text-xs font-semibold text-[#D94848] hover:bg-[#D94848]/10"
+                                  title="Revoke admin access"
+                                >
+                                  <ShieldOff size={14} />
+                                  Revoke
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setPendingRoleChange({ id: customer.id, name: customer.name, nextRole: 'admin' })}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#E3DCCF] px-3 py-1.5 text-xs font-semibold text-[#2D241E] hover:border-[#C25934] hover:text-[#C25934]"
+                                  title="Promote to admin"
+                                >
+                                  <ShieldCheck size={14} />
+                                  Promote
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </SectionCard>
+          )}
+
+          {activeTab === 'reviews' && (
+            <SectionCard title={`Product Reviews (${reviews.length})`}>
+              {reviews.length === 0 ? (
+                <EmptyState icon={Star} title="No reviews yet" description="Customer reviews will appear here." />
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="rounded-xl border border-[#E3DCCF] bg-[#FDFBF7] p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#2D241E]">
+                            {productNameById[review.product_id] || 'Unknown product'}
+                          </p>
+                          <div className="mt-1 flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, index) => (
+                              <Star
+                                key={index}
+                                size={14}
+                                className={index < review.rating ? 'fill-[#B98A2F] text-[#B98A2F]' : 'text-[#E3DCCF]'}
+                              />
+                            ))}
+                            <span className="ml-2 text-xs text-[#8A7E74]">by {review.user_name}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-shrink-0 items-center gap-3">
+                          <span className="text-xs text-[#8A7E74]">{review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}</span>
+                          <button
+                            type="button"
+                            onClick={() => setPendingDelete({ type: 'review', id: review.id, label: `${review.user_name}'s review` })}
+                            className="rounded-lg border border-[#E3DCCF] p-2 text-[#D94848] hover:bg-[#D94848]/10"
+                            title="Delete review"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="mt-3 text-sm text-[#5C4B40]">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </SectionCard>
@@ -1611,14 +1845,186 @@ export const Admin = () => {
 
           {activeTab === 'offer-media' && <AdminOfferMediaManager />}
 
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <SectionCard title="Revenue - Last 14 Days">
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={revenueTrend} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E3DCCF" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#5C4B40' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#5C4B40' }} />
+                      <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: 12, borderColor: '#E3DCCF' }} />
+                      <Line type="monotone" dataKey="revenue" stroke="#C25934" strokeWidth={2.5} dot={false} />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </SectionCard>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <SectionCard title="Top Selling Products">
+                  {topProducts.length === 0 ? (
+                    <EmptyState icon={Package} title="No sales yet" description="Best sellers will show up once orders come in." />
+                  ) : (
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={topProducts} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E3DCCF" />
+                          <XAxis type="number" tick={{ fontSize: 12, fill: '#5C4B40' }} />
+                          <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: '#5C4B40' }} />
+                          <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: 12, borderColor: '#E3DCCF' }} />
+                          <Bar dataKey="revenue" fill="#C25934" radius={[0, 6, 6, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </SectionCard>
+
+                <SectionCard title="Revenue by Category">
+                  {categoryRevenue.length === 0 ? (
+                    <EmptyState icon={Layers3} title="No sales yet" description="Category breakdown will show up once orders come in." />
+                  ) : (
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={categoryRevenue} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                            {categoryRevenue.map((entry, index) => (
+                              <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: 12, borderColor: '#E3DCCF' }} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </SectionCard>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'analytics' && <AnalyticsDashboard />}
+
+          {activeTab === 'settings' && (
+            <SectionCard title="Store Settings">
+              <form onSubmit={handleSettingsSubmit} className="space-y-5">
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Store Name</span>
+                    <input
+                      value={settingsForm.store_name}
+                      onChange={(event) => updateSettingsField('store_name', event.target.value)}
+                      className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Support Email</span>
+                    <input
+                      type="email"
+                      value={settingsForm.support_email}
+                      onChange={(event) => updateSettingsField('support_email', event.target.value)}
+                      className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Support Phone</span>
+                    <input
+                      value={settingsForm.support_phone}
+                      onChange={(event) => updateSettingsField('support_phone', event.target.value)}
+                      className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Address</span>
+                    <input
+                      value={settingsForm.address}
+                      onChange={(event) => updateSettingsField('address', event.target.value)}
+                      className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Tagline</span>
+                    <textarea
+                      value={settingsForm.tagline}
+                      onChange={(event) => updateSettingsField('tagline', event.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                    />
+                  </label>
+                </div>
+
+                <div className="border-t border-[#E3DCCF] pt-5">
+                  <h3 className="mb-4 font-['Playfair_Display'] text-lg font-bold text-[#2D241E]">Social Links</h3>
+                  <div className="grid gap-5 sm:grid-cols-3">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Facebook URL</span>
+                      <input
+                        value={settingsForm.facebook_url}
+                        onChange={(event) => updateSettingsField('facebook_url', event.target.value)}
+                        placeholder="https://facebook.com/..."
+                        className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Instagram URL</span>
+                      <input
+                        value={settingsForm.instagram_url}
+                        onChange={(event) => updateSettingsField('instagram_url', event.target.value)}
+                        placeholder="https://instagram.com/..."
+                        className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-[#2D241E]">Twitter URL</span>
+                      <input
+                        value={settingsForm.twitter_url}
+                        onChange={(event) => updateSettingsField('twitter_url', event.target.value)}
+                        placeholder="https://twitter.com/..."
+                        className="w-full rounded-lg border border-[#E3DCCF] px-4 py-3 outline-none focus:border-[#C25934] focus:ring-2 focus:ring-[#C25934]/20"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#C25934] px-6 py-3 font-semibold text-white hover:bg-[#A84C2A] disabled:cursor-not-allowed disabled:bg-[#C25934]/60"
+                  >
+                    <Save size={18} />
+                    {savingSettings ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              </form>
+            </SectionCard>
+          )}
         </main>
       </div>
 
       <AdminConfirmDialog
+        open={Boolean(pendingRoleChange)}
+        onOpenChange={(open) => { if (!open) setPendingRoleChange(null); }}
+        title={pendingRoleChange?.nextRole === 'admin' ? 'Promote to admin?' : 'Revoke admin access?'}
+        description={
+          pendingRoleChange?.nextRole === 'admin'
+            ? `"${pendingRoleChange?.name}" will gain full access to this admin panel.`
+            : `"${pendingRoleChange?.name}" will lose admin access and become a regular customer.`
+        }
+        confirmLabel={pendingRoleChange?.nextRole === 'admin' ? 'Promote' : 'Revoke'}
+        destructive={pendingRoleChange?.nextRole !== 'admin'}
+        onConfirm={handleConfirmedRoleChange}
+      />
+
+      <AdminConfirmDialog
         open={Boolean(pendingDelete)}
         onOpenChange={(open) => { if (!open) setPendingDelete(null); }}
-        title={pendingDelete?.type === 'product' ? 'Delete this product?' : pendingDelete?.type === 'coupon' ? 'Delete this coupon?' : 'Delete this message?'}
+        title={
+          pendingDelete?.type === 'product' ? 'Delete this product?'
+            : pendingDelete?.type === 'coupon' ? 'Delete this coupon?'
+            : pendingDelete?.type === 'review' ? 'Delete this review?'
+            : 'Delete this message?'
+        }
         description={`"${pendingDelete?.label}" will be permanently removed. This can't be undone.`}
         confirmLabel="Delete"
         destructive

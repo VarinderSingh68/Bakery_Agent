@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export const Contact = () => {
+  const settings = useSiteSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -121,7 +123,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-[#2D241E] mb-1">Phone</p>
-                    <p className="text-[#5C4B40]">+91 98765 43210</p>
+                    <p className="text-[#5C4B40]">{settings.support_phone}</p>
                   </div>
                 </div>
 
@@ -131,7 +133,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-[#2D241E] mb-1">Email</p>
-                    <p className="text-[#5C4B40]">info@artisanbakery.com</p>
+                    <p className="text-[#5C4B40]">{settings.support_email}</p>
                   </div>
                 </div>
 
@@ -141,10 +143,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-[#2D241E] mb-1">Address</p>
-                    <p className="text-[#5C4B40]">
-                      123 Bakery Street<br />
-                      Mumbai, Maharashtra 400001
-                    </p>
+                    <p className="text-[#5C4B40]">{settings.address}</p>
                   </div>
                 </div>
               </div>

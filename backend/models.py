@@ -163,3 +163,17 @@ class Wishlist(Base):
 
     user = relationship("User")
 
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+
+    id = Column(String, primary_key=True, default="default")
+    store_name = Column(String, nullable=True)
+    tagline = Column(String, nullable=True)
+    support_email = Column(String, nullable=True)
+    support_phone = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    facebook_url = Column(String, nullable=True)
+    instagram_url = Column(String, nullable=True)
+    twitter_url = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+

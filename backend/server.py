@@ -387,6 +387,19 @@ class ContactMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=500)
 
+class SiteSettingsUpdate(BaseModel):
+    store_name: Optional[str] = None
+    tagline: Optional[str] = None
+    support_email: Optional[str] = None
+    support_phone: Optional[str] = None
+    address: Optional[str] = None
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+
+class UserRoleUpdate(BaseModel):
+    role: str = Field(pattern="^(admin|customer)$")
+
 class ProductCreate(BaseModel):
     name: str
     category: str
@@ -2322,6 +2335,26 @@ async def get_product_reviews(product_id: str, db_session: AsyncSession = Depend
     reviews = await crud.get_product_reviews(db_session, product_id)
     return [serialize_sqlalchemy_record(r) for r in reviews]
 
+@api_router.get("/admin/reviews")
+async def list_admin_reviews(admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    reviews = await crud.get_all_reviews(db_session)
+    return [serialize_sqlalchemy_record(r) for r in reviews]
+
+@api_router.delete("/admin/reviews/{review_id}")
+async def delete_admin_review(review_id: str, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    review = await crud.get_review_by_id(db_session, review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    product_id = review.product_id
+    await crud.delete_review(db_session, review_id)
+
+    remaining = await crud.get_product_reviews(db_session, product_id)
+    avg_rating = round(sum(r.rating for r in remaining) / len(remaining), 1) if remaining else 0.0
+    await crud.update_product(db_session, product_id, {"rating": avg_rating, "reviews_count": len(remaining)})
+
+    return {"message": "Review deleted successfully"}
+
 # Coupons endpoint
 @api_router.post("/coupons/validate")
 async def validate_coupon(data: CouponValidate, db_session: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
@@ -2487,6 +2520,27 @@ async def contact_submit(message: ContactMessage, db_session: AsyncSession = Dep
     contact = await crud.create_contact(db_session, contact_dict)
     return {"message": "Thank you for your message. We'll get back to you soon!"}
 
+DEFAULT_SITE_SETTINGS = {
+    "store_name": "Artisan Bakery",
+    "tagline": "Handcrafted baked goods made with love and the finest ingredients. Experience the art of traditional baking.",
+    "support_email": "info@artisanbakery.com",
+    "support_phone": "+91 98765 43210",
+    "address": "123 Bakery Street, Mumbai, Maharashtra 400001",
+    "facebook_url": "",
+    "instagram_url": "",
+    "twitter_url": "",
+}
+
+# Site settings (public read, admin write)
+@api_router.get("/settings")
+async def get_site_settings(db_session: AsyncSession = Depends(get_db)):
+    settings = await crud.get_settings(db_session)
+    if not settings:
+        return DEFAULT_SITE_SETTINGS
+    data = serialize_sqlalchemy_record(settings)
+    data.pop("id", None)
+    return {**DEFAULT_SITE_SETTINGS, **{key: value for key, value in data.items() if value}}
+
 # Offer and reel endpoints
 @api_router.get("/offer-media")
 async def list_public_offer_media(db_session: AsyncSession = Depends(get_db)):
@@ -2642,6 +2696,37 @@ async def list_admin_users(admin: User = Depends(get_admin_user), db_session: As
         }
         for row in rows
     ]
+
+@api_router.put("/admin/users/{user_id}/role")
+async def update_admin_user_role(user_id: str, payload: UserRoleUpdate, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="You cannot change your own role")
+    if user_id == "fallback-admin" and payload.role != "admin":
+        raise HTTPException(status_code=400, detail="The primary admin account's role cannot be changed")
+
+    target = await crud.get_user_by_id(db_session, user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    updated = await crud.update_user_role(db_session, user_id, payload.role)
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "email": updated.email,
+        "username": updated.username,
+        "role": updated.role,
+        "picture": updated.picture,
+        "created_at": updated.created_at.isoformat() if updated.created_at else None,
+    }
+
+# Admin site settings
+@api_router.put("/admin/settings")
+async def update_admin_settings(updates: SiteSettingsUpdate, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    update_data = {key: value for key, value in updates.model_dump().items() if value is not None}
+    settings = await crud.upsert_settings(db_session, update_data)
+    data = serialize_sqlalchemy_record(settings)
+    data.pop("id", None)
+    return {**DEFAULT_SITE_SETTINGS, **{key: value for key, value in data.items() if value}}
 
 # Admin coupon management
 @api_router.get("/admin/coupons")

@@ -269,6 +269,47 @@ async def get_users(session: AsyncSession) -> List[User]:
     result = await session.execute(stmt)
     return result.scalars().all()
 
+async def update_user_role(session: AsyncSession, user_id: str, role: str):
+    stmt = update(User).where(User.id == user_id).values(role=role).returning(User)
+    result = await session.execute(stmt)
+    await session.commit()
+    return result.scalar_one_or_none()
+
+# Reviews (admin moderation)
+async def get_all_reviews(session: AsyncSession) -> List[Review]:
+    stmt = select(Review).order_by(Review.created_at.desc())
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+async def get_review_by_id(session: AsyncSession, review_id: str) -> Optional[Review]:
+    result = await session.execute(select(Review).where(Review.id == review_id))
+    return result.scalar_one_or_none()
+
+async def delete_review(session: AsyncSession, review_id: str):
+    stmt = delete(Review).where(Review.id == review_id)
+    await session.execute(stmt)
+    await session.commit()
+
+# Site settings (singleton row)
+async def get_settings(session: AsyncSession) -> Optional[SiteSettings]:
+    result = await session.execute(select(SiteSettings).where(SiteSettings.id == "default"))
+    return result.scalar_one_or_none()
+
+async def upsert_settings(session: AsyncSession, updates: Dict[str, Any]) -> SiteSettings:
+    existing = await get_settings(session)
+    if existing:
+        for key, value in updates.items():
+            setattr(existing, key, value)
+        await session.commit()
+        await session.refresh(existing)
+        return existing
+
+    settings_obj = SiteSettings(id="default", **updates)
+    session.add(settings_obj)
+    await session.commit()
+    await session.refresh(settings_obj)
+    return settings_obj
+
 # Offer media
 async def get_offer_media(session: AsyncSession, active_only: bool = True) -> List[OfferMedia]:
     stmt = select(OfferMedia)
