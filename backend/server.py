@@ -7,6 +7,14 @@ from starlette.staticfiles import StaticFiles
 import os
 import logging
 import asyncio
+
+# Configure logging before importing any local modules (e.g. database.py) that
+# log at import time — otherwise those early messages are silently dropped or
+# fall back to Python's unformatted "last resort" handler.
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -120,7 +128,7 @@ except Exception as e:
 app = FastAPI()
 
 # Add CORS middleware
-logging.warning(f"CORS middleware configured to allow origins: {cors_origins}")
+logging.info(f"CORS middleware configured to allow origins: {cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -2785,10 +2793,6 @@ async def health():
 # Include router
 app.include_router(api_router)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 
 def ensure_coupon_code_column():

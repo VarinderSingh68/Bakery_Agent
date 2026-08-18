@@ -31,7 +31,7 @@ elif _sqlite_is_healthy(ROOT_DB_PATH):
 else:
     ACTIVE_DB_PATH = BACKEND_DB_PATH
 
-logging.getLogger(__name__).warning(f"Using SQLite database at: {ACTIVE_DB_PATH}")
+logging.getLogger(__name__).info(f"Using SQLite database at: {ACTIVE_DB_PATH}")
 DATABASE_URL = f"sqlite+aiosqlite:///{ACTIVE_DB_PATH.as_posix()}"
 
 engine = create_async_engine(

@@ -178,6 +178,7 @@ export const Admin = () => {
       console.error('Failed to fetch admin data:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Admin login required');
+        await logout();
         navigate('/admin-login', { replace: true });
         return;
       }
@@ -185,7 +186,7 @@ export const Admin = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, logout]);
 
   useEffect(() => {
     if (authLoading) return;

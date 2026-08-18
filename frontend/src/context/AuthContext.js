@@ -59,6 +59,18 @@ export const AuthProvider = ({ children }) => {
         return response;
       },
       (error) => {
+        if (error.response?.status === 401) {
+          const requestUrl = error.config?.url || '';
+          const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+          // A 401 on any authenticated request means the stored token is stale/invalid.
+          // Clear it so the app doesn't keep treating the user as logged in and
+          // bouncing between protected pages and the login page.
+          if (!isAuthEndpoint) {
+            persistAuthState(null, null);
+            setToken(null);
+            setUser(null);
+          }
+        }
         return Promise.reject(error);
       }
     );
