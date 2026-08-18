@@ -223,6 +223,28 @@ async def get_coupon(session: AsyncSession, code: str) -> Optional[Coupon]:
     result = await session.execute(select(Coupon).where(Coupon.code == code.upper()))
     return result.scalar_one_or_none()
 
+async def get_coupons(session: AsyncSession) -> List[Coupon]:
+    result = await session.execute(select(Coupon).order_by(Coupon.expiry_date.asc()))
+    return result.scalars().all()
+
+async def create_coupon(session: AsyncSession, coupon_dict: Dict[str, Any]) -> Coupon:
+    coupon = Coupon(**coupon_dict)
+    session.add(coupon)
+    await session.commit()
+    await session.refresh(coupon)
+    return coupon
+
+async def update_coupon(session: AsyncSession, code: str, updates: Dict[str, Any]):
+    stmt = update(Coupon).where(Coupon.code == code.upper()).values(**updates).returning(Coupon)
+    result = await session.execute(stmt)
+    await session.commit()
+    return result.scalar_one_or_none()
+
+async def delete_coupon(session: AsyncSession, code: str):
+    stmt = delete(Coupon).where(Coupon.code == code.upper())
+    await session.execute(stmt)
+    await session.commit()
+
 # Contacts
 async def create_contact(session: AsyncSession, contact_dict: Dict[str, Any]) -> ContactMessage:
     contact = ContactMessage(**contact_dict)
@@ -230,6 +252,22 @@ async def create_contact(session: AsyncSession, contact_dict: Dict[str, Any]) ->
     await session.commit()
     await session.refresh(contact)
     return contact
+
+async def get_contacts(session: AsyncSession) -> List[ContactMessage]:
+    stmt = select(ContactMessage).order_by(ContactMessage.created_at.desc())
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+async def delete_contact(session: AsyncSession, contact_id: str):
+    stmt = delete(ContactMessage).where(ContactMessage.id == contact_id)
+    await session.execute(stmt)
+    await session.commit()
+
+# Users
+async def get_users(session: AsyncSession) -> List[User]:
+    stmt = select(User).order_by(User.created_at.desc())
+    result = await session.execute(stmt)
+    return result.scalars().all()
 
 # Offer media
 async def get_offer_media(session: AsyncSession, active_only: bool = True) -> List[OfferMedia]:

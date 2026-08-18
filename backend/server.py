@@ -367,8 +367,13 @@ class Coupon(BaseModel):
     code: str
     discount_percentage: float
     expiry_date: str
-    active: bool
- 
+    active: bool = True
+
+class CouponUpdate(BaseModel):
+    discount_percentage: Optional[float] = None
+    expiry_date: Optional[str] = None
+    active: Optional[bool] = None
+
 class CouponValidate(BaseModel):
     code: str
     total: float
@@ -2620,6 +2625,79 @@ async def delete_banner(banner_id: str, admin: User = Depends(get_admin_user), d
         raise HTTPException(status_code=404, detail="Banner not found")
     await crud.delete_banner(db_session, banner_id)
     return {"message": "Banner deleted successfully"}
+
+# Admin customer directory
+@api_router.get("/admin/users")
+async def list_admin_users(admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    rows = await crud.get_users(db_session)
+    return [
+        {
+            "id": row.id,
+            "name": row.name,
+            "email": row.email,
+            "username": row.username,
+            "role": row.role,
+            "picture": row.picture,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in rows
+    ]
+
+# Admin coupon management
+@api_router.get("/admin/coupons")
+async def list_admin_coupons(admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    rows = await crud.get_coupons(db_session)
+    return [serialize_sqlalchemy_record(row) for row in rows]
+
+@api_router.post("/admin/coupons")
+async def create_admin_coupon(coupon: Coupon, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    code = coupon.code.strip().upper()
+    if not code:
+        raise HTTPException(status_code=400, detail="Coupon code is required")
+
+    existing = await crud.get_coupon(db_session, code)
+    if existing:
+        raise HTTPException(status_code=400, detail="A coupon with this code already exists")
+
+    created = await crud.create_coupon(db_session, {
+        "code": code,
+        "discount_percentage": coupon.discount_percentage,
+        "expiry_date": coupon.expiry_date,
+        "active": coupon.active,
+    })
+    return serialize_sqlalchemy_record(created)
+
+@api_router.put("/admin/coupons/{code}")
+async def update_admin_coupon(code: str, updates: CouponUpdate, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    existing = await crud.get_coupon(db_session, code)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+
+    update_data = {key: value for key, value in updates.model_dump().items() if value is not None}
+    if not update_data:
+        return serialize_sqlalchemy_record(existing)
+
+    updated = await crud.update_coupon(db_session, code, update_data)
+    return serialize_sqlalchemy_record(updated)
+
+@api_router.delete("/admin/coupons/{code}")
+async def delete_admin_coupon(code: str, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    existing = await crud.get_coupon(db_session, code)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    await crud.delete_coupon(db_session, code)
+    return {"message": "Coupon deleted successfully"}
+
+# Admin contact message inbox
+@api_router.get("/admin/contacts")
+async def list_admin_contacts(admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    rows = await crud.get_contacts(db_session)
+    return [serialize_sqlalchemy_record(row) for row in rows]
+
+@api_router.delete("/admin/contacts/{contact_id}")
+async def delete_admin_contact(contact_id: str, admin: User = Depends(get_admin_user), db_session: AsyncSession = Depends(get_db)):
+    await crud.delete_contact(db_session, contact_id)
+    return {"message": "Message deleted successfully"}
 
 # Admin endpoints
 @api_router.get("/admin/orders")
