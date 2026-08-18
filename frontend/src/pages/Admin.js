@@ -49,6 +49,7 @@ import { AnalyticsDashboard } from '../components/AnalyticsDashboard';
 import { AdminOfferMediaManager } from '../components/AdminOfferMediaManager';
 import { AdminBannerManager } from '../components/AdminBannerManager';
 import { AdminConfirmDialog } from '../components/AdminConfirmDialog';
+import { ADMIN_SESSION_KEY } from '../components/AdminRoute';
 
 const emptyProductForm = {
   name: '',
@@ -309,6 +310,7 @@ export const Admin = () => {
       console.error('Failed to fetch admin data:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Admin login required');
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
         await logout();
         navigate('/admin-login', { replace: true });
         return;
@@ -783,6 +785,7 @@ export const Admin = () => {
   };
 
   const handleLogout = async () => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
     await logout();
     navigate('/admin-login');
   };

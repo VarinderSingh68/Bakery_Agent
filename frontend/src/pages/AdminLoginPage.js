@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { ADMIN_SESSION_KEY } from '../components/AdminRoute';
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState('admin@bakery.com');
@@ -16,10 +17,13 @@ const AdminLoginPage = () => {
 
   const from = location.state?.from?.pathname || '/admin';
 
-  // Only auto-redirect admin users ONCE to prevent redirect loops
-  // when the stored token is invalid and the backend rejects it
+  // Skip the login form only if this tab already actively signed in as admin
+  // (e.g. navigating back to /admin-login after logging in earlier this session).
+  // A merely-persisted token from a previous browser session does NOT count -
+  // visiting /admin fresh must always show this form first.
   useEffect(() => {
-    if (!authLoading && user?.role === 'admin' && !redirectAttemptedRef.current) {
+    const hasActiveAdminSession = sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
+    if (!authLoading && hasActiveAdminSession && user?.role === 'admin' && !redirectAttemptedRef.current) {
       redirectAttemptedRef.current = true;
       navigate(from, { replace: true });
     }
@@ -34,6 +38,7 @@ const AdminLoginPage = () => {
       const loggedInUser = await login(email, password);
 
       if (loggedInUser && loggedInUser.role === 'admin') {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
         toast.success('Welcome Admin!');
         redirectAttemptedRef.current = true;
         navigate(from, { replace: true });
