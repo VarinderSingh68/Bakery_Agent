@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useReveal } from '../hooks/useReveal';
 
 /**
@@ -28,7 +28,24 @@ export const Reveal = ({
   ...rest
 }) => {
   const [ref, isVisible] = useReveal(threshold ? { threshold } : undefined);
-  const visible = trigger === 'mount' ? true : isVisible;
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    if (trigger !== 'mount') return undefined;
+    // A transition needs the browser to paint the hidden state before the
+    // visible state is applied, or there's nothing to animate from — two
+    // rAFs guarantee a frame lands in between across browsers.
+    let raf2;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setHasMounted(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [trigger]);
+
+  const visible = trigger === 'mount' ? hasMounted : isVisible;
 
   return (
     <Component

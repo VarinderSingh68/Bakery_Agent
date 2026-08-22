@@ -157,7 +157,7 @@ export const ProductCard = ({ product }) => {
               className={`flex w-full items-center justify-center space-x-2 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition-all duration-300 ${
                 product.stock === 0
                   ? 'cursor-not-allowed bg-gray-200 text-gray-400'
-                  : 'bg-gradient-to-r from-[#C25934] to-[#A84C2A] text-white shadow-md hover:scale-[1.01] hover:from-[#A84C2A] hover:shadow-lg'
+                  : 'btn-shine bg-gradient-to-r from-[#C25934] to-[#A84C2A] text-white shadow-md hover:scale-[1.01] hover:from-[#A84C2A] hover:shadow-lg'
               }`}
               data-testid={`add-to-cart-${product.id}`}
             >

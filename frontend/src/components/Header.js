@@ -72,7 +72,7 @@ export const Header = () => {
           }`}
         >
           {/* Logo */}
-          <Link to="/" className="flex items-center" data-testid="logo-link">
+          <Link to="/" className="appear appear-scale flex items-center" style={{ '--d': '0.08s' }} data-testid="logo-link">
             <h1
               className={`font-bold text-[#C25934] font-['Playfair_Display'] tracking-tight transition-all duration-500 ${
                 isScrolled ? 'text-2xl' : 'text-3xl'
@@ -84,15 +84,18 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8" data-testid="desktop-nav">
-            {NAV_LINKS.map((link) => {
+            {NAV_LINKS.map((link, index) => {
               const isActive = location.pathname === link.to;
+              const delays = ['0.16s', '0.28s', '0.4s', '0.52s'];
+              const appearVariant = index % 2 === 0 ? 'appear-scale' : 'appear-soft';
               return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`nav-underline font-medium transition-colors duration-300 ${
+                  className={`appear ${appearVariant} nav-underline font-medium transition-colors duration-300 ${
                     isActive ? 'text-[#C25934] is-active' : 'text-[#2D241E] hover:text-[#C25934]'
                   }`}
+                  style={{ '--d': delays[index] || '0.5s' }}
                   data-testid={link.testId}
                 >
                   {link.label}
@@ -172,7 +175,8 @@ export const Header = () => {
             ) : (
               <Link
                 to="/login"
-                className="bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-6 py-2 font-medium transition-all duration-300 transform hover:scale-105"
+                className="appear appear-scale btn-shine bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-6 py-2 font-medium transition-all duration-300 transform hover:scale-105"
+                style={{ '--d': '0.34s' }}
                 data-testid="login-button"
               >
                 Login

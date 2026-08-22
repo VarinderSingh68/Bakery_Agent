@@ -489,6 +489,92 @@ header.site-header.is-scrolled {
   border-bottom-color: #D8CDB9;
 }
 
+/* ==========================================================================
+   Load-in entrance system for above-the-fold header/hero content.
+   Unlike .reveal (scroll-triggered, IntersectionObserver-driven), these run
+   once via a plain CSS @keyframes animation the instant each element mounts,
+   staggered purely with a per-element --d delay — the same sequential
+   badge -> heading -> copy -> actions choreography the reference site uses.
+   ========================================================================== */
+@keyframes appear-scale {
+  from { opacity: 0; transform: scale(0.86); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes appear-soft {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.appear {
+  opacity: 0;
+  animation-duration: 0.9s;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: var(--d, 0.05s);
+}
+
+.appear-scale { animation-name: appear-scale; }
+.appear-soft { animation-name: appear-soft; }
+
+/* Masked headline reveal — each line sits in an overflow-hidden strip so
+   the text wipes up into place instead of just fading, matching the
+   reference site's clipped hero-heading entrance. */
+.mask-line {
+  display: block;
+  overflow: hidden;
+}
+
+.mask-line-inner {
+  display: block;
+  animation: appear-mask 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0.1s);
+}
+
+@keyframes appear-mask {
+  from { opacity: 0; transform: translateY(52%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Badge icon pop — a quick overshoot + rotate-in for the icon inside an
+   entrance badge, echoing the reference site's sparkle-in flourish. */
+.badge-icon-pop {
+  display: inline-flex;
+  animation: badge-icon-pop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--d, 0.3s);
+}
+
+@keyframes badge-icon-pop {
+  0% { opacity: 0; transform: scale(0.3) rotate(-45deg); }
+  65% { opacity: 1; transform: scale(1.15) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* Liquid shine sweep — a soft diagonal highlight that sweeps across a
+   button on hover, the same liquid-button flourish the reference site
+   uses, rendered here in the site's own colors (the buttons keep their
+   existing background; only the sweep highlight is added). */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.btn-shine:hover::after,
+.btn-shine:focus-visible::after {
+  transform: translateX(130%);
+}
+
 /* Respect reduced-motion preferences across the whole animation system. */
 @media (prefers-reduced-motion: reduce) {
   .reveal {
@@ -498,5 +584,15 @@ header.site-header.is-scrolled {
   }
   .marquee-track {
     animation: none !important;
+  }
+  .appear,
+  .mask-line-inner,
+  .badge-icon-pop {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .btn-shine::after {
+    display: none;
   }
 }

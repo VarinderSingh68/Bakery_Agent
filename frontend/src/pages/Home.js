@@ -162,28 +162,33 @@ export const Home = () => {
             <div className="space-y-8">
               <Reveal trigger="mount" variant="up" delay={0}>
                 <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-full shadow-md border border-[#E3DCCF]">
-                  <Sparkles size={20} className="text-[#C25934]" />
+                  <span className="badge-icon-pop" style={{ '--d': '0.3s' }}>
+                    <Sparkles size={20} className="text-[#C25934]" />
+                  </span>
                   <span className="text-sm font-semibold text-[#2D241E] uppercase tracking-wider">
                     Handcrafted Fresh Daily
                   </span>
                 </div>
               </Reveal>
-              <Reveal trigger="mount" variant="up" delay={0.12} as="h1" className="text-5xl sm:text-6xl lg:text-7xl font-['Playfair_Display'] font-bold text-[#2D241E] leading-none tracking-tight" data-testid="hero-title">
-                Artisan Baked
-                <br />
-                <span className="text-[#C25934] inline-block">Goods Daily</span>
-              </Reveal>
-              <Reveal trigger="mount" variant="up" delay={0.24}>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-['Playfair_Display'] font-bold text-[#2D241E] leading-none tracking-tight" data-testid="hero-title">
+                <span className="mask-line">
+                  <span className="mask-line-inner" style={{ '--d': '0.2s' }}>Artisan Baked</span>
+                </span>
+                <span className="mask-line">
+                  <span className="mask-line-inner text-[#C25934]" style={{ '--d': '0.36s' }}>Goods Daily</span>
+                </span>
+              </h1>
+              <Reveal trigger="mount" variant="up" delay={0.56}>
                 <p className="text-lg leading-relaxed text-[#5C4B40] max-w-xl">
                   Over 180 handcrafted products across 15 categories. From classic cakes to gourmet macarons,
                   fresh-baked donuts to curated gift hampers.
                 </p>
               </Reveal>
-              <Reveal trigger="mount" variant="up" delay={0.36}>
+              <Reveal trigger="mount" variant="up" delay={0.7}>
                 <div className="flex flex-wrap gap-4">
                   <Link
                     to="/shop"
-                    className="group bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-lg hover:shadow-2xl transform hover:scale-105"
+                    className="btn-shine group bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-lg hover:shadow-2xl transform hover:scale-105"
                     data-testid="shop-now-button"
                   >
                     <span>Shop Now</span>
@@ -191,7 +196,7 @@ export const Home = () => {
                   </Link>
                   <Link
                     to="/contact"
-                    className="bg-white border-2 border-[#2D241E] text-[#2D241E] hover:bg-[#2D241E] hover:text-[#FDFBF7] rounded-full px-10 py-5 font-semibold transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105"
+                    className="btn-shine bg-white border-2 border-[#2D241E] text-[#2D241E] hover:bg-[#2D241E] hover:text-[#FDFBF7] rounded-full px-10 py-5 font-semibold transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105"
                     data-testid="contact-button"
                   >
                     Contact Us
@@ -316,7 +321,7 @@ export const Home = () => {
           <Reveal variant="up" delay={0.1} className="text-center mt-16">
             <Link
               to="/shop"
-              className="group bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-lg hover:shadow-2xl transform hover:scale-105"
+              className="btn-shine group bg-[#C25934] text-white hover:bg-[#A84C2A] rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-lg hover:shadow-2xl transform hover:scale-105"
               data-testid="view-all-button"
             >
               <span>View All Products</span>
@@ -366,7 +371,7 @@ export const Home = () => {
             <Reveal variant="up" delay={0.1} className="text-center mt-16">
               <Link
                 to="/shop"
-                className="group bg-white border-2 border-[#C25934] text-[#C25934] hover:bg-[#C25934] hover:text-white rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-md hover:shadow-xl transform hover:scale-105"
+                className="btn-shine group bg-white border-2 border-[#C25934] text-[#C25934] hover:bg-[#C25934] hover:text-white rounded-full px-10 py-5 font-semibold transition-all duration-300 inline-flex items-center space-x-2 shadow-md hover:shadow-xl transform hover:scale-105"
                 data-testid="explore-more-button"
               >
                 <span>Explore More</span>
@@ -427,7 +432,7 @@ export const Home = () => {
               </div>
               <Link
                 to="/contact"
-                className="inline-block bg-transparent border-2 border-[#2D241E] text-[#2D241E] hover:bg-[#2D241E] hover:text-[#FDFBF7] rounded-full px-8 py-4 font-semibold transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105"
+                className="btn-shine inline-block bg-transparent border-2 border-[#2D241E] text-[#2D241E] hover:bg-[#2D241E] hover:text-[#FDFBF7] rounded-full px-8 py-4 font-semibold transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105"
               >
                 Learn More
               </Link>

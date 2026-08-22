@@ -196,7 +196,7 @@ export const PromoBanner = () => {
 
                     <Link
                       to={banner.ctaLink}
-                      className="inline-flex items-center space-x-2 rounded-full px-8 py-4 text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                      className="btn-shine inline-flex items-center space-x-2 rounded-full px-8 py-4 text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                       style={{ background: banner.accent, color: banner.bgFrom }}
                       data-testid={index === current ? 'banner-cta' : undefined}
                     >
