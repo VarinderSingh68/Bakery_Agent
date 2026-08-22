@@ -4,6 +4,7 @@ import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { Reveal } from '../components/Reveal';
 
 export const Cart = () => {
   const { cart, removeFromCart, updateQuantity } = useCart();
@@ -43,9 +44,14 @@ export const Cart = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.items.map((item) => (
-              <div
+            {cart.items.map((item, index) => (
+              <Reveal
                 key={item.product_id}
+                variant="left"
+                trigger="mount"
+                delay={index * 0.06}
+                duration={0.5}
+                as="div"
                 className="bg-white rounded-2xl p-6 border border-[#E3DCCF] flex items-center space-x-6"
                 data-testid={`cart-item-${item.product_id}`}
               >
@@ -93,7 +99,7 @@ export const Cart = () => {
                 >
                   <Trash2 size={20} />
                 </button>
-              </div>
+              </Reveal>
             ))}
           </div>
 

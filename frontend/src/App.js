@@ -53,22 +53,26 @@ function AppRouter() {
     <>
       {!useCleanLayout && <Header />}
       <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin-login" element={<AdminLoginPage />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/offers" element={<Offers />} />
-          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-        </Routes>
+        {/* Keying on the path gives every route change the same soft
+            fade-in the reference site uses when moving between sections. */}
+        <div key={location.pathname} className="page-transition">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin-login" element={<AdminLoginPage />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+          </Routes>
+        </div>
       </main>
       {!useCleanLayout && <Footer />}
       {!useCleanLayout && <ExitIntentModal />}

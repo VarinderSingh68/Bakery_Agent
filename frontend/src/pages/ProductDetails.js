@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth, getAuthHeaders } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { ProductCard } from '../components/ProductCard';
+import { Reveal } from '../components/Reveal';
 import { fallbackProducts } from '../data/fallbackProducts';
 
 const normalizeProducts = (rows) => {
@@ -199,17 +200,17 @@ export const ProductDetails = () => {
         {/* Product Details */}
         <div className="grid md:grid-cols-2 gap-12 mb-16">
           {/* Image */}
-          <div className="bg-white rounded-2xl p-8 border border-[#E3DCCF]">
+          <Reveal variant="left" trigger="mount" className="bg-white rounded-2xl p-8 border border-[#E3DCCF]">
             <img
               src={product.image}
               alt={product.name}
               className="w-full h-[500px] object-cover rounded-xl"
               data-testid="product-image"
             />
-          </div>
+          </Reveal>
 
           {/* Info */}
-          <div className="space-y-6">
+          <Reveal variant="right" trigger="mount" delay={0.15} className="space-y-6">
             <div>
               <p className="text-sm text-[#8A7E74] uppercase tracking-wider font-semibold mb-2">
                 {product.category}
@@ -349,11 +350,11 @@ export const ProductDetails = () => {
                 </button>
               )}
             </div>
-          </div>
+          </Reveal>
         </div>
 
         {/* Reviews Section */}
-        <div className="bg-white rounded-2xl p-8 border border-[#E3DCCF]">
+        <Reveal variant="up" className="bg-white rounded-2xl p-8 border border-[#E3DCCF]">
           <h2 className="text-2xl font-['Playfair_Display'] font-bold text-[#2D241E] mb-8">
             Customer Reviews
           </h2>
@@ -433,12 +434,12 @@ export const ProductDetails = () => {
               ))}
             </div>
           )}
-        </div>
+        </Reveal>
 
         {/* Recommended Products */}
         {recommendedProducts.length > 0 && (
           <section className="mt-16">
-            <div className="flex items-end justify-between mb-8">
+            <Reveal variant="up" className="flex items-end justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-['Playfair_Display'] font-bold text-[#2D241E] tracking-tight">
                   Recommended Products
@@ -447,10 +448,12 @@ export const ProductDetails = () => {
                   You may also like these similar picks
                 </p>
               </div>
-            </div>
+            </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" data-testid="recommended-products-grid">
-              {recommendedProducts.map((item) => (
-                <ProductCard key={item.id} product={item} />
+              {recommendedProducts.map((item, index) => (
+                <Reveal key={item.id} variant="up" delay={(index % 4) * 0.08} duration={0.6} threshold={0.05}>
+                  <ProductCard product={item} />
+                </Reveal>
               ))}
             </div>
           </section>

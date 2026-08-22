@@ -61,7 +61,7 @@ export const ProductCard = ({ product }) => {
       data-testid={`product-card-${product.id}`}
       className="block h-full"
     >
-      <div className="group mx-auto flex h-full max-w-[17.5rem] flex-col overflow-hidden rounded-[1.45rem] border border-[#E7DED1] bg-white/95 shadow-[0_12px_26px_rgba(92,75,64,0.08)] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_22px_42px_rgba(92,75,64,0.14)]">
+      <div className="corner-accent group mx-auto flex h-full max-w-[17.5rem] flex-col overflow-hidden rounded-[1.45rem] border border-[#E7DED1] bg-white/95 shadow-[0_12px_26px_rgba(92,75,64,0.08)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:shadow-[0_22px_42px_rgba(92,75,64,0.14)]">
         {/* Image with lazy loading */}
         <div className="relative aspect-[1.28] overflow-hidden bg-[radial-gradient(circle_at_top,#fff9f0_0%,#f3efe6_62%,#eadfce_100%)]">
           <img

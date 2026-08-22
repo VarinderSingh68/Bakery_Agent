@@ -171,7 +171,11 @@ export const PromoBanner = () => {
                 />
 
                 <div className="relative z-10 flex min-h-[340px] items-center px-8 py-16 sm:px-10 md:min-h-[400px] md:px-14 md:py-20 lg:px-16">
-                  <div className="max-w-2xl">
+                  <div
+                    className={`max-w-2xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      index === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                    }`}
+                  >
                     <div
                       className="mb-5 inline-block rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
                       style={{ background: `${banner.accent}30`, color: banner.accent, border: `1px solid ${banner.accent}40` }}

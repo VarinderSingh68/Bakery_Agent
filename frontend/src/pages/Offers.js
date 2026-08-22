@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { BadgePercent, ExternalLink, Instagram, Sparkles } from 'lucide-react';
+import { Reveal } from '../components/Reveal';
 
 const normalizeItems = (rows) => {
   if (!Array.isArray(rows)) return [];
@@ -49,7 +50,7 @@ export const Offers = () => {
     <div className="min-h-screen bg-[#FDFBF7]" data-testid="offers-page">
       <section className="border-b border-[#E3DCCF] bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
+          <Reveal variant="up" trigger="mount" className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E3DCCF] bg-[#FDFBF7] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[#C25934]">
               <Sparkles size={16} />
               Fresh picks from the bakery
@@ -60,7 +61,7 @@ export const Offers = () => {
             <p className="mt-5 max-w-2xl text-base leading-7 text-[#5C4B40]">
               Browse current bakery offers and watch the latest behind-the-counter moments.
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -102,9 +103,14 @@ export const Offers = () => {
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-testid="offers-grid">
-                    {offers.map((offer) => (
-                      <article
+                    {offers.map((offer, index) => (
+                      <Reveal
                         key={offer.id}
+                        as="article"
+                        variant="up"
+                        delay={(index % 3) * 0.08}
+                        duration={0.6}
+                        threshold={0.05}
                         className="overflow-hidden rounded-2xl border border-[#E3DCCF] bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1"
                       >
                         <div className="aspect-[4/3] overflow-hidden bg-[#F3EFE6]">
@@ -138,7 +144,7 @@ export const Offers = () => {
                             </a>
                           )}
                         </div>
-                      </article>
+                      </Reveal>
                     ))}
                   </div>
                 </div>
@@ -159,8 +165,16 @@ export const Offers = () => {
                   </div>
 
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="reels-grid">
-                    {reels.map((reel) => (
-                      <article key={reel.id} className="rounded-2xl border border-[#E3DCCF] bg-white p-4 shadow-sm">
+                    {reels.map((reel, index) => (
+                      <Reveal
+                        key={reel.id}
+                        as="article"
+                        variant="up"
+                        delay={(index % 4) * 0.08}
+                        duration={0.6}
+                        threshold={0.05}
+                        className="rounded-2xl border border-[#E3DCCF] bg-white p-4 shadow-sm"
+                      >
                         <div className="aspect-[9/16] overflow-hidden rounded-xl bg-[#2D241E]">
                           {reel.embed_url ? (
                             <iframe
@@ -190,7 +204,7 @@ export const Offers = () => {
                             </a>
                           )}
                         </div>
-                      </article>
+                      </Reveal>
                     ))}
                   </div>
                 </div>

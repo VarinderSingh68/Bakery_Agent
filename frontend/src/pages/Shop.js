@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ProductCard } from '../components/ProductCard';
+import { Reveal } from '../components/Reveal';
 import { toast } from 'sonner';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fallbackProducts } from '../data/fallbackProducts';
@@ -163,14 +164,14 @@ export const Shop = () => {
     <div className="min-h-screen bg-[#FDFBF7] py-12" data-testid="shop-page">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
+        <Reveal variant="up" trigger="mount" className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-[#2D241E] tracking-tight mb-4">
             Our Products
           </h1>
           <p className="text-base text-[#5C4B40]">
             Explore our full collection of 180+ artisan baked goods
           </p>
-        </div>
+        </Reveal>
 
         {/* Search & Sort Row */}
         <div className="mb-8 flex flex-col md:flex-row gap-4 items-center">
@@ -242,8 +243,10 @@ export const Shop = () => {
 
             {/* Grid */}
             <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="products-grid">
-              {paginatedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {paginatedProducts.map((product, index) => (
+                <Reveal key={product.id} variant="up" delay={(index % 8) * 0.05} duration={0.6} threshold={0.05}>
+                  <ProductCard product={product} />
+                </Reveal>
               ))}
             </div>
 
