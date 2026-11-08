@@ -1,0 +1,15 @@
+[build]
+  base = "frontend"
+  command = "npm install --no-audit --no-fund && npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Don't fail the build on ESLint warnings (CRA treats warnings as errors when CI=true)
+  CI = "false"
+
+# Single-page app: send all unknown routes to index.html so client-side routing works
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
